@@ -1,0 +1,242 @@
+#!/bin/sh
+#
+# Copyright (C) 2015-2016 Tomato shibby-shadowsocks  
+# Copyright (C) 2015-2016 Jason Lin <wojiaolinmu008@gmail.com>
+# --------------------------------------------------------------------------------------------------------
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+# --------------------------------------------------------------------------------------------------------
+#
+
+# Debug 
+#set -x
+# SMTP server (EP:"smtp.gmail.com")
+SMTP="smtp.163.com"
+# Send E-mail Username
+username=""
+# Send E-mail password
+password=""
+# Sender E-mail
+FROM=""
+# E-mail Subject
+TITLE="ShadowSocks"
+# Content of E-mail
+CONTENT="Your tools running over the wall!"
+# Target E-mail address
+TO=""
+
+# XIAOMI Fan Mode
+#xiaomi_fan=0
+
+# ADM ad filter
+#adm_filter=0
+
+READ="\033[31;1m"
+BOLD="\033[42;1m"	
+NORM="\033[0m"
+ansi_red="\033[1;31m";
+ansi_white="\033[1;37m";
+ansi_green="\033[1;32m";
+ansi_yellow="\033[1;33m";
+ansi_blue="\033[1;34m";
+ansi_bell="\007";
+ansi_blink="\033[5m";
+ansi_std="\033[m";
+ansi_rev="\033[7m";
+ansi_ul="\033[4m";
+INFO="$BOLD INFO: $NORM"
+WARNING="$READ WARNING: $NORM"
+MOUNT="$ansi_white MOUNT: "
+DEPENDENCE="$ansi_white DEPENDENCE: "
+PLATFORM="$ansi_white PLATFORM: "
+PACKAGES="$ansi_white PACKAGES: "
+SHADOWSOCKS="$ansi_white SHADOWSOCKS: "
+START_SCRIPT="$ansi_white START_SCRIPT: "
+ShadowSocks_Account="$ansi_white ShadowSocks_Account: "
+DNSMASQ="$ansi_white DNSMASQ: "
+ZONEINFO_ASIA="$ansi_white ZONEINFO_ASIA: "
+mult_switch="$ansi_white mult_switch: "
+ss_switch="$ansi_white ss_switch: "
+update_scr="$ansi_white update_scr: "
+rebuild_scr="$ansi_white rebuild_scr: "
+
+# You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
+PREFIX=/jffs
+SCRIPT_DIR=$(dirname ${0})
+SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
+
+# Time
+DATE=$(date "+%Y-%m-%d %H:%M:%S")
+
+# Configure dnsmasq
+dnsmasq=/opt/etc/dnsmasq.conf
+
+# Schduler
+CHECK=/opt/etc
+
+# Zoneinfo
+ZONE=/opt/share/zoneinfo/Hongkong
+
+# Link
+gfw_block_list="https://raw.githubusercontent.com/koolshare/koolshare.github.io/master/maintain_files/gfwlist.conf"
+china_routing_list="http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest"
+china_domain_list="https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
+china_google_list="https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf"
+
+case ${1} in
+
+"run" )
+	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
+	
+	if [ -f "$PREFIX/shadowsocks/chnroutes.lock" ]; then
+		$PREFIX/shadowsocks/shadowsocks update
+	else
+		echo '['$DATE'] Has loaded China route table.' > /var/log/chnroutes.log
+	fi
+	
+	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
+	if [ -z "$PROCESS" ]; then
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
+		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
+#		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
+#		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
+#		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
+#		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
+#		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
+		/opt/etc/init.d/S00timezone start
+		/opt/etc/init.d/S10cron start
+		exit 0	
+	else
+		for i in `cat /var/log/server.txt`;do
+        		for j in `cat $PREFIX/opt/var/log/server.txt`;do
+                		if [ $i == $j ]; then
+					echo "$(date): OK" >> /var/log/account_switching.log
+				else
+					/opt/etc/init.d/S22shadowsocks restart
+#					/opt/etc/init.d/S23ss-tunnel restart
+					rm -f $PREFIX/shadowsocks/flush.lock
+					$PREFIX/shadowsocks/shadowsocks flush
+					sleep 2
+					$PREFIX/shadowsocks/shadowsocks rules
+				fi
+			done
+		done
+	fi
+	;;
+
+"modules" )
+	insmod /opt/lib/modules/xt_set.ko
+	;;
+	
+"rules" )
+	/opt/etc/init.d/S99ss-rules start
+	sleep 1
+	iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN	
+	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
+	;;	
+	
+"flush" )
+	ss-rules -f
+	;;
+
+"check" )
+	SHADOWSOCKS=$(ps | grep "ss-redir" | grep -v "grep")
+	if [ -f "/var/log/shadowsocks.lock" ]; then
+		if [ -z "$SHADOWSOCKS" ]; then
+        		echo '['$DATE'] Shadowsoks abnormal operation, restarting shadowsocks.' >> /var/log/shadowsocks_watchdog.log 2>&1
+			/opt/etc/init.d/S22shadowsocks start
+		else
+      			echo '['$DATE'] No problem, the normal operation of shadowsoks.' >> /var/log/shadowsocks_watchdog.log 2>&1
+		fi
+	fi		
+	
+	dnscrypt=$(ps | grep "dnscrypt-proxy" | grep -v "grep")
+	if [ -f "/var/log/dnscrypt-proxy.lock" ]; then
+		if [ -z "$dnscrypt" ]; then
+			echo '['$DATE'] dnscrypt-proxy abnormal operation, restarting dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
+#			/opt/etc/init.d/S29dnscrypt-proxy start
+		else
+			echo '['$DATE'] No problem, the normal operation of dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
+		fi
+	fi	
+	
+	Pcap_DNSProxy=$(ps | grep "Pcap_DNSProxy" | grep -v "grep")
+	if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
+		if [ -z "$Pcap_DNSProxy" ]; then
+			echo '['$DATE'] Pcap_DNSProxy abnormal operation, restarting Pcap_DNSProxy.' >> /var/log/Pcap_DNSProxy_watchdog.log 2>&1
+#			/opt/etc/init.d/S27pcap_dnsproxy start
+		else
+			echo '['$DATE'] No problem, the normal operation of Pcap_DNSProxy.' >> /var/log/Pcap_DNSProxy_watchdog.log 2>&1
+		fi
+	fi
+
+	PDNSD=$(ps | grep "pdnsd" | grep -v "grep")
+	if [ -f "/var/log/pdnsd.lock" ]; then	
+		if [ -z "$PDNSD" ]; then
+			echo '['$DATE'] Pdnsd abnormal operation, restarting pdnsd.' >> /var/log/pdnsd_watchdog.log 2>&1
+#			/opt/etc/init.d/S26pdnsd start
+		else
+			echo '['$DATE'] No problem, the normal operation of pdnsd.' >> /var/log/pdnsd_watchdog.log 2>&1
+		fi
+	fi	
+
+	OLD_WAN_IP=`cat /var/log/wan_ipaddr.log`
+	if [ ! $OLD_WAN_IP == `nvram get wan_ppp_get_ip` ]; then
+		iptables -t nat -D SS_SPEC_WAN_AC -d `cat /var/log/wan_ipaddr.log` -j RETURN	
+		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN
+		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
+	fi
+	
+	judge=$(cd $PREFIX/shadowsocks && ls | grep "ignore.list" | grep -v "grep")
+	if [ -z "$judge" ]; then
+		exit 0
+	else
+		CHINADNS=$(ps | grep "chinadns" | grep -v "grep")
+		if [ -f "/var/log/chinadns.lock" ]; then
+			if [ -z "$CHINADNS" ]; then
+				echo '['$DATE'] ChinaDNS is restarting.' >> /var/log/chinadns_watchdog.log 2>&1
+#				/opt/etc/init.d/S24chinadns start
+			else
+				echo '['$DATE'] ChinaDNS no problem.' >> /var/log/chinadns_watchdog.log 2>&1
+			fi
+		fi
+	fi		
+	;;	
+		
+*)
+	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
+	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.20 $ansi_std"
+	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
+	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
+	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
+	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
+	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
+	echo -e "$ansi_green # This is free software, licensed under the GNU General Public License v3. $ansi_std"
+	echo -e "$ansi_green # See /LICENSE for more information. $ansi_std"
+	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
+	echo -e "$ansi_white ===================================================================== $ansi_std"
+	echo -e "$ansi_blue WIKI: $ansi_std"
+	echo -e "$ansi_white   [set_up] Set ShadowSocks and ChinaDNS $ansi_std"
+	echo -e "$ansi_white   [run] Running ShadowSocks and ChinaDNS $ansi_std"
+	echo -e "$ansi_white   [ipset] Loading module and ipset rule $ansi_std"
+	echo -e "$ansi_white   [rules] Application Firewall Policy $ansi_std"
+	echo -e "$ansi_white   [global] Global Proxy $ansi_std"
+	echo -e "$ansi_white   [flush] Clear firewall policy $ansi_std"
+	echo -e "$ansi_white   [update] Update chnroutes Routing Host $ansi_std"
+	echo -e "$ansi_white   [update_gfwlist] Update GFWLIST domain $ansi_std"
+	echo -e "$ansi_white   [check] Guardian ss-redir* $ansi_std"
+	echo -e "$ansi_white   [check_rules] Guardian iptables rules $ansi_std"
+	echo -e "$ansi_white   [ss_switch] Account switching $ansi_std"
+	echo -e "$ansi_white   [mult_switch] Multiple_switching $ansi_std"
+	echo -e "$ansi_white   [lan_ignore] LAN access control $ansi_std"
+	echo -e "$ansi_white   [off_on] Turn off switch $ansi_std"
+	echo -e "$ansi_white   [update_scr] Update script $ansi_std"
+	echo -e "$ansi_white   [rebuild_scr] Rebuild script $ansi_std"	
+	echo -e "$ansi_white   [mail] Send shadowsocks running information $ansi_std"
+	echo -e "$ansi_white   [help] Script help $ansi_std"
+	echo -e "$ansi_white ===================================================================== $ansi_std"
+	exit 
+	;;
+esac
