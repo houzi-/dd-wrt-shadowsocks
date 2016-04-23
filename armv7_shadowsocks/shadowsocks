@@ -95,8 +95,8 @@ case ${1} in
 			mount -o bind $PREFIX/opt /opt
 			cd /opt && wget -O - http://pkg.entware.net/binaries/armv7/installer/entware_install.sh | sh
 			tar -czf /tmp/opt_backup_old.tar.gz -C $PREFIX opt			
-			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/cron* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/bash* -a -e $SCRIPT_DIR/dnsma* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* reso* shadow* diff* dnscr* dnsma* cron* bash*
+			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/cron* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* ]; then
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* reso* shadow* diff* dnscr* dnsma* cron*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -161,12 +161,12 @@ case ${1} in
 
 	BIN=/opt/bin
 	SBIN=/opt/sbin
-	echo -e "bash \nchinadns \ncrontab \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir \ndnsmasq" > /var/log/find.txt	
+	echo -e "chinadns \ncrontab \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir \ndnsmasq" > /var/log/find.txt	
 	cd $BIN
 	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f resolvip -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then	
-		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy crontab bash > /var/log/find_N.txt
+		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy crontab > /var/log/find_N.txt
 	else
-		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy crontab bash > /var/log/find_N.txt
+		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy crontab > /var/log/find_N.txt
 	fi
 	cd /
 	
@@ -185,7 +185,7 @@ case ${1} in
 		echo -e $ansi_white"dnsmasq-full"$ansi_std
 	fi
 	
-	find $BIN/chinadns $BIN/Pcap_DNSProxy $BIN/ss-redir $BIN/resolvip $BIN/pdnsd-ctl $BIN/diff $BIN/dnscrypt-proxy $BIN/crontab $SBIN/dnsmasq $BIN/bash &> /dev/null;echo $? > /var/log/diff.txt
+	find $BIN/chinadns $BIN/Pcap_DNSProxy $BIN/ss-redir $BIN/resolvip $BIN/pdnsd-ctl $BIN/diff $BIN/dnscrypt-proxy $BIN/crontab $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/diff.txt
 	DIFF=`sed -n '1p' /var/log/diff.txt`
 	diff -w /var/log/find.txt /var/log/find_N.txt | grep \^\< > /var/log/diff_show.txt
 	if [ "$DIFF" == "0" ]; then
@@ -193,13 +193,13 @@ case ${1} in
 		sleep 1 
 		echo -e "$ansi_green PASS. $ansi_std"
 	else
-		if [ ! -e $BIN/chinadns -a ! -e $BIN/crontab -a ! -e $BIN/diff -a ! -e $BIN/Pcap_DNSProxy -a ! -e $BIN/pdnsd-ctl -a ! -e $BIN/resolvip -a ! -e $BIN/ss-redir -a ! -e $BIN/dnscrypt-proxy -a ! -e $SBIN/dnsmasq -a ! -e $BIN/bash ]; then
+		if [ ! -e $BIN/chinadns -a ! -e $BIN/crontab -a ! -e $BIN/diff -a ! -e $BIN/Pcap_DNSProxy -a ! -e $BIN/pdnsd-ctl -a ! -e $BIN/resolvip -a ! -e $BIN/ss-redir -a ! -e $BIN/dnscrypt-proxy -a ! -e $SBIN/dnsmasq ]; then
 			echo -e $DEPENDENCE
 			sleep 1
 			echo -e "$ansi_red ERROR. $ansi_std"
 			echo -e "$WARNING \n$BOLD Please install the following software:"$NORM
 			rm -rf $PREFIX/opt
-			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \nresolvip \ndiffutils \ncrontab \ndnscrypt-proxy \ndnsmasq \nbash"$ansi_std
+			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \nresolvip \ndiffutils \ncrontab \ndnscrypt-proxy \ndnsmasq"$ansi_std
 			exit 0
 		else	
 			echo -e $DEPENDENCE
@@ -320,7 +320,14 @@ Your Choice:"
 		nvram set time_zone="Asia/Shanghai"
 
 		echo -e $INFO Configuring dnsmasq_custom...
-		nvram set dnsmasq_options="conf-dir=$PREFIX/shadowsocks/dnsmasq.d"
+		nvram set cron_enable=0
+		echo -e "min-cache-ttl=6000 \ncache-size=10000 \
+			\nexpand-hosts \naddn-hosts=/tmp/hosts \
+			\min-port=4096 \nrebind-localhost-ok \
+			\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
+			> /var/log/dnsmasq_custom.txt
+		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
+		nvram set dnsmasq_options="$DNS_CUSTOM"		
 		
 		/opt/etc/init.d/S56dnsmasq restart
 		
@@ -363,7 +370,7 @@ uptest= none;
 #		shadowsocks temp
 #	
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"	
-		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/tomato-shadowsocks/issues. $ansi_std"
+		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
 	elif [ $programs == "2" ];then
 		echo -e "$BOLD Set programs_2..." $NORM
@@ -426,10 +433,16 @@ uptest= none;
 
 		nvram set time_zone="Asia/Shanghai"		
 
-		echo -e $INFO Configuring dnsmasq_custom...			
-		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \nmin-cache-ttl=6000 \ncache-size=10000 \nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" > /var/log/dnsmasq_custom.txt
+		echo -e $INFO Configuring dnsmasq_custom...				
+		nvram set cron_enable=0
+		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \
+			\nmin-cache-ttl=6000 \ncache-size=10000 \
+			\nexpand-hosts \naddn-hosts=/tmp/hosts \
+			\min-port=4096 \nrebind-localhost-ok \
+			\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
+			> /var/log/dnsmasq_custom.txt
 		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"
+		nvram set dnsmasq_options="$DNS_CUSTOM"		
 		
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -438,15 +451,15 @@ uptest= none;
 		nvram commit
 
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log \necho \"\" > /var/log/pdnsd_watchdog.log \necho \"\" > /var/log/chinadns_watchdog.log \necho \"\" > /var/log/iptables_rules.log" > $CHECK/cron.5mins/clear_log.sh
-		echo 'iptables-save | grep -E "SS_SPEC|ADM_|WANPREROUTING|POSTROUTING|^\*nat" > /var/log/iptables-restore.log' > $CHECK/cron.5mins/iptables_restore.sh
+#		echo 'iptables-save | grep -E "SS_SPEC|ADM_|WANPREROUTING|POSTROUTING|^\*nat" > /var/log/iptables-restore.log' > $CHECK/cron.5mins/iptables_restore.sh
 		echo -e "shadowsocks check \nshadowsocks check_rules" > $CHECK/cron.1min/check.sh		
 
-		shadowsocks temp		
-		
+#		shadowsocks temp		
+#		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
-		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/tomato-shadowsocks/issues. $ansi_std"
+		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
 	elif [ $programs == "3" ];then
 		echo -e "$BOLD Set programs_3..." $NORM
@@ -485,9 +498,16 @@ uptest= none;
 		nvram set time_zone="Asia/Shanghai"
 
 		echo -e $INFO Configuring dnsmasq_custom...
-		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \nproxy-dnssec \nmin-cache-ttl=6000 \ncache-size=10000 \nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" > /var/log/dnsmasq_custom.txt
+		nvram set cron_enable=0
+		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \
+			\nproxy-dnssec \
+			\nmin-cache-ttl=6000 \ncache-size=10000 \
+			\nexpand-hosts \naddn-hosts=/tmp/hosts \
+			\min-port=4096 \nrebind-localhost-ok \
+			\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
+			> /var/log/dnsmasq_custom.txt
 		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"		
+		nvram set dnsmasq_options="$DNS_CUSTOM"			
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -504,7 +524,7 @@ uptest= none;
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
-		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/tomato-shadowsocks/issues. $ansi_std"
+		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
 	elif [ $programs == "4" ];then
 		echo -e "$BOLD Set programs_4..." $NORM
@@ -539,7 +559,14 @@ uptest= none;
 		nvram set time_zone="Asia/Shanghai"		
 
 		echo -e $INFO Configuring dnsmasq_custom...		
-		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \nall-servers \nproxy-dnssec \nmin-cache-ttl=6000 \ncache-size=10000 \nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" > /var/log/dnsmasq_custom.txt
+		nvram set cron_enable=0
+		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \
+			\nproxy-dnssec \
+			\nmin-cache-ttl=6000 \ncache-size=10000 \
+			\nexpand-hosts \naddn-hosts=/tmp/hosts \
+			\min-port=4096 \nrebind-localhost-ok \
+			\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
+			> /var/log/dnsmasq_custom.txt
 		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
 		nvram set dnsmasq_options="$DNS_CUSTOM"	
 		
@@ -558,7 +585,7 @@ uptest= none;
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
-		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/tomato-shadowsocks/issues. $ansi_std"
+		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
 	elif [ $programs == "5" ];then
 		echo -e "$BOLD Set programs_5..." $NORM
@@ -597,10 +624,16 @@ uptest= none;
 
 		nvram set time_zone="Asia/Shanghai"		
 		
-		echo -e $INFO Configuring dnsmasq_custom...		
-		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \nall-servers \nmin-cache-ttl=6000 \ncache-size=10000 \nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" > /var/log/dnsmasq_custom.txt
+		echo -e $INFO Configuring dnsmasq_custom...
+		nvram set cron_enable=0
+		echo -e "no-resolv \nno-poll \nserver=127.0.0.1#5353 \
+			\nmin-cache-ttl=6000 \ncache-size=10000 \
+			\nexpand-hosts \naddn-hosts=/tmp/hosts \
+			\min-port=4096 \nrebind-localhost-ok \
+			\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
+			> /var/log/dnsmasq_custom.txt
 		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"		
+		nvram set dnsmasq_options="$DNS_CUSTOM"			
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -617,13 +650,15 @@ uptest= none;
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
-		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/tomato-shadowsocks/issues. $ansi_std"
+		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
 	fi	
 	;;	
 
 "modules" )
+	echo -e -n "$ansi_white Load_Modules... "	
 	insmod /opt/lib/modules/xt_set.ko
+	echo -e "            $ansi_green done. $ansi_std"	
 	;;
 	
 "run" )
@@ -645,7 +680,6 @@ uptest= none;
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-		/opt/etc/init.d/S00timezone start
 		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
@@ -656,7 +690,6 @@ uptest= none;
 				else
 					/opt/etc/init.d/S22shadowsocks restart
 #					/opt/etc/init.d/S23ss-tunnel restart
-					rm -f $PREFIX/shadowsocks/flush.lock
 					$PREFIX/shadowsocks/shadowsocks flush
 					sleep 2
 					$PREFIX/shadowsocks/shadowsocks rules
@@ -667,17 +700,211 @@ uptest= none;
 	;;
 	
 "rules" )
-	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
-	/opt/etc/init.d/S99ss-rules start
-	sleep 1
-	iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN	
-	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
-	;;
-	
-"flush" )
-	ss-rules -f
+	if [ -f "$CHECK/ignore.list" ]; then
+		sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
+		/opt/etc/init.d/S99ss-rules start
+		sleep 1
+		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN	
+		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
+	else
+		iptables-save | grep -v "gfw_black_list" | iptables-restore 2>/dev/null
+		ipset -X gfw_black_list 2>/dev/null	
+		ipset -N gfw_black_list hash:ip
+		iptables -t nat -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
+			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
+		iptables -t nat -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \ 
+			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
+	fi		
 	;;
 
+"global" )
+	echo -e "$ansi_white Do you really want to remove all build lists?(y/N)$ansi_std"
+	read choice
+	if [ "${choice}" == "y" ]; then
+		if [ -f "$CHECK/global.list" ]; then
+			GLOBAL_LIST=$CHECK/global.list
+			cat > $GLOBAL_LIST <<-EOF
+			0.0.0.0/8
+			10.0.0.0/8
+			100.64.0.0/10
+			127.0.0.0/8
+			169.254.0.0/16
+			172.16.0.0/12
+			192.0.0.0/24
+			192.0.2.0/24
+			192.88.99.0/24
+			192.168.0.0/16
+			198.18.0.0/15
+			198.51.100.0/24
+			203.0.113.0/24
+			224.0.0.0/4
+			240.0.0.0/4
+			255.255.255.255
+			EOF
+		fi
+		
+		sed -i 's/\$ignore_list/$global.list/' $CHECK/init.d/S99ss-rules
+	else
+		sed -i 's/\$global_list/$ignore.list/' $CHECK/init.d/S99ss-rules
+	fi
+
+	$PREFIX/shadowsocks/shadowsocks flush	
+	$PREFIX/shadowsocks/shadowsocks rules	
+	
+	echo -e -n "$ansi_white Global... "	
+	sleep 1
+	echo -e "            $ansi_green done. $ansi_std"	
+	;;	
+	
+"flush" )
+	echo -e -n "$ansi_white Flush_iptables... "
+	if [ -f "$CHECK/ignore.list" ]; then
+		ss-rules -f
+	else
+		iptables-save | grep -v "gfw_black_list" | iptables-restore 2>/dev/null
+		ipset -X gfw_black_list 2>/dev/null
+	fi	
+	sleep 1
+	echo -e "            $ansi_green done. $ansi_std"	
+	;;
+
+"update" )
+	directory=$(cd $PREFIX/shadowsocks && ls | grep "dnsmasq.d" | grep -v "grep")
+	if [ -z "$directory" ]; then
+		cd $PREFIX/shadowsocks && mkdir dnsmasq.d
+	fi
+
+	if [ -f "$PREFIX/shadowsocks/ignore.list" ]; then
+		rm -f $PREFIX/shadowsocks/ignore.list
+	fi
+
+	wget -q -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
+	
+	IGNORE_TEMP_LIST=/var/log/ignore_tmp.txt
+	IGNORE_LIST=$CHECK/ignore.list
+
+	cat > $IGNORE_LIST <<-EOF
+	0.0.0.0/8
+	10.0.0.0/8
+	100.64.0.0/10
+	127.0.0.0/8
+	169.254.0.0/16
+	172.16.0.0/12
+	192.0.0.0/24
+	192.0.2.0/24
+	192.88.99.0/24
+	192.168.0.0/16
+	198.18.0.0/15
+	198.51.100.0/24
+	203.0.113.0/24
+	224.0.0.0/4
+	240.0.0.0/4
+	255.255.255.255
+	$(cat ${IGNORE_TEMP_LIST:=/dev/null} 2>/dev/null)
+	EOF
+
+	if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
+		rm -f $CHECK/pcap-dnsproxy/Routing.txt $CHECK/pcap-dnsproxy/WhiteList.txt
+
+		# Update Local Hosts
+		cd /tmp;curl -s --insecure -O $china_domain_list;cd /
+		echo -e '[Local Hosts]' >> /tmp/WhiteList.txt
+		echo -e '## China mainland domains' >> /tmp/WhiteList.txt
+		echo -e '## Get the latest database: https://github.com/xinhugo/Free-List/blob/master/WhiteList.txt' >> /tmp/WhiteList.txt
+		echo -e '## Report an issue: https://github.com/xinhugo/Free-List/issues' >> /tmp/WhiteList.txt
+		echo -e "## Last update: $DATE\n" >> /tmp/WhiteList.txt
+		sed 's|/114.114.114.114$||' /tmp/accelerated-domains.china.conf > /tmp/WhiteList_tmp.txt
+		sed -i 's|\(\.\)|\\\1|g' /tmp/WhiteList_tmp.txt
+		sed -i 's|server=/|.*\\\b|' /tmp/WhiteList_tmp.txt
+		sed -i 's|b\(cn\)$|\.\1|' /tmp/WhiteList_tmp.txt
+		cat /tmp/WhiteList_tmp.txt >> /tmp/WhiteList.txt
+
+		cd /tmp;curl -s --insecure -O $china_google_list;cd /
+		sed 's|/114.114.114.114$||' /tmp/google.china.conf > /tmp/WhiteList_tmp.txt
+		sed -i 's|\(\.\)|\\\1|g' /tmp/WhiteList_tmp.txt
+		sed -i 's|server=/|.*\\\b|' /tmp/WhiteList_tmp.txt
+		cat /tmp/WhiteList_tmp.txt >> /tmp/WhiteList.txt
+		echo -e -n "$ansi_white Updating Local Hosts... "
+		sleep 1
+		echo -e "            $ansi_green done. $ansi_std"
+
+		cp /tmp/WhiteList.txt $CHECK/pcap-dnsproxy
+		rm -f /tmp/WhiteList_tmp.txt /tmp/WhiteList.txt /tmp/accelerated-domains.china.conf /tmp/google.china.conf
+	
+		# Update Local Routing
+		curl -s --insecure $china_routing_list | grep ipv4 | grep CN | awk -F\| '{printf("%s/%d\n", $4, 32-log($5)/log(2))}' > /tmp/Routing_IPv4.txt
+		echo -e '[Local Routing]' >> /tmp/Routing_IPv4_tmp.txt
+		echo -e '## China mainland routing blocks' >> /tmp/Routing_IPv4_tmp.txt
+		echo -e "## Last update: $DATE\n\n" >> /tmp/Routing_IPv4_tmp.txt
+		echo -e '## IPv4' >> /tmp/Routing_IPv4_tmp.txt
+		echo -e '## Get the latest database from APNIC -> https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' >> /tmp/Routing_IPv4_tmp.txt
+		cat /tmp/Routing_IPv4.txt >> /tmp/Routing_IPv4_tmp.txt
+
+		curl -s --insecure $china_routing_list | grep ipv6 | grep CN | awk -F\| '{printf("%s/%d\n", $4, $5)}' > /tmp/Routing_IPv6.txt
+		echo -e '## IPv6' >> /tmp/Routing_IPv6_tmp.txt
+		echo -e '## Get the latest database from APNIC -> https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' >> /tmp/Routing_IPv6_tmp.txt
+		cat /tmp/Routing_IPv6.txt >> /tmp/Routing_IPv6_tmp.txt
+
+		cat /tmp/Routing_IPv6_tmp.txt >> /tmp/Routing_IPv4_tmp.txt
+		touch /tmp/Routing.txt
+		cat /tmp/Routing_IPv4_tmp.txt >> /tmp/Routing.txt
+		echo -e -n "$ansi_white Updating Local Routing... "
+		sleep 1
+		echo -e "            $ansi_green done. $ansi_std" 
+	
+		cp /tmp/Routing.txt $CHECK/pcap-dnsproxy
+		rm -f /tmp/Routing_IPv4.txt /tmp/Routing_IPv4_tmp.txt /tmp/Routing_IPv6.txt /tmp/Routing_IPv6_tmp.txt /tmp/Routing.txt
+	else
+		wget -q -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
+		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /
+		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
+		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
+		sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
+	fi
+
+	rm -f $PREFIX/shadowsocks/dns.list
+	rm -f $IGNORE_TEMP_LIST
+	
+	if [ -f "$PREFIX/shadowsocks/update.lock" ]; then
+		echo '['$DATE'] Has loaded China route table.' > /var/log/chnroutes.log
+	else
+		if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
+			/opt/etc/init.d/S27pcap-dnsproxy restart
+			$PREFIX/shadowsocks/shadowsocks flush
+			sleep 1
+			$PREFIX/shadowsocks/shadowsocks rules
+			/opt/etc/init.d/S56dnsmasq restart	
+		else
+			/opt/etc/init.d/S24chinadns restart
+			$PREFIX/shadowsocks/shadowsocks flush
+			sleep 1
+			$PREFIX/shadowsocks/shadowsocks rules
+			/opt/etc/init.d/S56dnsmasq restart
+		fi
+	fi
+	echo -e -n "$ansi_white Updating chnroutes... "
+	sleep 1
+	echo -e "            $ansi_green done. $ansi_std"	
+	;;	
+	
+"update_gfwlist" )
+	echo -e -n "$ansi_white Updating gfwlist... "
+	directory=$(cd $PREFIX/shadowsocks && ls | grep "dnsmasq.d" | grep -v "grep")
+	if [ -z "$directory" ]; then
+		cd $PREFIX/shadowsocks && mkdir dnsmasq.d
+	fi
+		
+	DNS=127.0.0.1#1054
+		
+	wget -q -t0 -O $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf $gfw_block_list
+		
+	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
+	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
+	sleep 1
+	echo -e "            $ansi_green done. $ansi_std"
+	service dnsmasq restart
+	;;	
+	
 "check" )
 	SHADOWSOCKS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -f "/var/log/shadowsocks.lock" ]; then
@@ -739,13 +966,241 @@ uptest= none;
 				echo '['$DATE'] ChinaDNS no problem.' >> /var/log/chinadns_watchdog.log 2>&1
 			fi
 		fi
-	fi		
-	;;	
+	fi			
+	;;
+	
+"ss_switch" )
+	ask_yes_or_no() {
+    		read -p "$1 ([y]es or [n]o): "
+    		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
+        		y|yes) echo "yes" ;;
+        		*)     echo "no" ;;
+    		esac
+	}
+	
+	echo -e $INFO Please select $BOLD server $NORM or $BOLD JSON file $NORM? "\033[4m yes \033[0m"  or "\033[4m no \033[0m"
+	if [ "yes" == $(ask_yes_or_no "Select JSON file?") ]; then
+		echo -e $INFO Creating JSON file...
+		rm -f $CHECK/shadowsocks.json
+
+		echo "============================================"
+		echo "Please input your shadowsocks account imformation:"
+		read -p "(Your Server IP):" IP
+		read -p "(Your Server Port):" port
+		read -p "(Your Local Port):" PORT
+		read -p "(Your Password):" password
+		read -p "(Your Encryption Method):" method
+		echo "============================================"
+		echo "Please confirm your shadowsocks imformation:"
+		echo -e "Your Server IP: \033[41;37m ${IP} \033[0m"
+		echo -e "Your Server Port: \033[41;37m ${port} \033[0m"
+		echo -e "Your Server Port: \033[41;37m ${PORT} \033[0m"
+		echo -e "Your Password: \033[41;37m ${password} \033[0m"
+		echo -e "Your Encryption Method: \033[41;37m ${method} \033[0m"
+		echo "============================================"
+
+		resolvip -t 10 ${IP} > /opt/var/log/resolvip_tmp.txt
+		if [ `cat /opt/var/log/resolvip_tmp.txt | cut -d"." -f1` == `resolvip -t 10 192. | cut -d"." -f1` ] &> /dev/null; then
+			echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks ss_switch"$NORM				
+			exit 0					
+		fi		
+		server_ip=/opt/var/log/resolvip_tmp.txt
 		
+		get_server_ip() {
+			cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
+				$(cat ${server_ip=:/dev/null} 2>/dev/null)	
+		EOF
+		}
+		echo $(get_server_ip) > /opt/var/log/resolvip.txt
+		sed -i '/^$/d' /opt/var/log/resolvip.txt		
+		if [ -s "/opt/var/log/resolvip.txt" ]; then
+			echo -e -n $ss_switch
+			RIP=`sed -n '1p' /opt/var/log/resolvip.txt`
+			cat > $CHECK/shadowsocks.json <<-end
+{
+    "server":"$RIP",
+    "server_port":${port},
+    "local_address":"0.0.0.0",
+    "local_port":${PORT},
+    "password":"${password}",
+    "timeout":60,
+    "method":"${method}"
+}
+			end
+			sed -i '11d' $CHECK/shadowsocks.json		
+			sleep 1 
+			echo -e "$ansi_green PASS. $ansi_std"			
+		else
+			echo -e -n $ss_switch
+			sleep 1 
+			echo -e "$ansi_red ERROR. $ansi_std"
+			echo -e "$WARNING Can not write the configuration information, please re-enter your: $ansi_white \nshadowsocks ss_switch"$NORM
+			exit 0			
+		fi	
+	else
+		echo -e $INFO Creating server file...
+		echo "============================================"
+		echo "Please input your shadowsocks account imformation:"
+		read -p "(Your Server IP):" IP
+		echo "============================================"
+		echo "Please confirm your shadowsocks imformation:"
+		echo -e "Your Server IP: \033[41;37m ${IP} \033[0m"
+		echo "============================================"
+
+		resolvip -t 10 ${IP} > /opt/var/log/resolvip_tmp.txt
+		if [ `cat /opt/var/log/resolvip_tmp.txt | cut -d"." -f1` == `resolvip -t 10 192. | cut -d"." -f1` ] &> /dev/null; then
+			echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks mult_switch"$NORM				
+			exit 0					
+		fi		
+		server_ip=/opt/var/log/resolvip_tmp.txt
+		
+		get_server_ip() {
+			cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
+				$(cat ${server_ip=:/dev/null} 2>/dev/null)	
+		EOF
+		}
+		echo $(get_server_ip) > /opt/var/log/resolvip.txt
+		sed -i '/^$/d' /opt/var/log/resolvip.txt
+		if [ -s "/opt/var/log/resolvip.txt" ]; then
+			echo -e -n $ss_switch
+			RIP=`sed -n '1p' /opt/var/log/resolvip.txt`
+			sed -i 's/\("server":"\).*/\1'"$RIP"'",/g' $CHECK/shadowsocks.json
+			sleep 1 
+			echo -e "$ansi_green PASS. $ansi_std"		
+		else
+			echo -e -n $ss_switch
+			sleep 1 
+			echo -e "$ansi_red ERROR. $ansi_std"
+			echo -e "$WARNING Can not write IP, please re-enter your: $ansi_white \nshadowsocks ss_switch"$NORM
+			exit 0
+		fi
+	fi
+
+	$PREFIX/shadowsocks/shadowsocks run
+	/opt/etc/init.d/S56dnsmasq restart
+	;;	
+
+"wan_ac" )
+	echo -e "$ansi_white Allow list within?(y/N)$ansi_std"
+	read choice
+	if [ "${choice}" == "y" ]; then
+		sed -i '/\w$WAN_AC_IN/s/^\s*#//' /opt/bin/ss-watchdog
+		sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+		sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+		sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+		sleep 1
+		$PREFIX/shadowsocks/shadowsocks flush
+		$PREFIX/shadowsocks/shadowsocks rules		
+	else
+		sed -i '/\$WAN_AC_OUT/s/^\s*#//' /opt/bin/ss-watchdog		
+		sed -i '/\w$WAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+		sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+		sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+		sleep 1
+		$PREFIX/shadowsocks/shadowsocks flush
+		$PREFIX/shadowsocks/shadowsocks rules
+	fi		
+	;;
+
+"lan_ac" )
+	echo -e "--------------$BOLD[IP]$NORM-------------$BOLD[MAC]$NORM--------------"
+	arp -vn -i br0 | awk '{gsub(/[()]|at/,"");NF-=3}1'
+	echo "-----------------------------------------------------------"	
+	
+	echo -e "$ansi_white Allow list within?(y/N)$ansi_std"
+	read choice
+	if [ "${choice}" == "y" ]; then
+		i=1
+		sed -i '/^$/d' $CHECK/shadowsocks/LAN_AC_IN/lan_ac.list		
+		echo "please input your ips: "
+		while :
+		do
+   			read ip
+   			if [[ ${ip} != "" ]]  &> /dev/null && echo -e $INFO OK!
+   			then
+				get_lan_ip() {
+					cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
+						${ip}
+				EOF
+				}
+				echo $(get_lan_ip) >> $CHECK/shadowsocks/LAN_AC_IN/lan_ac.list
+				grep -n '^$' $CHECK/shadowsocks/LAN_AC_IN/lan_ac.list > /dev/null;echo $? > /tmp/null.log
+				null=`cat /tmp/null.log`
+				[ "$null" == "0" ] && exit 0
+   			else
+				echo -e $INFO OK!
+				sed -i '/\w$LAN_AC_IN/s/^\s*#//' /opt/bin/ss-watchdog	
+				sed -i '/\$wWAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+				sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+				sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+				sleep 1
+				$PREFIX/shadowsocks/shadowsocks flush
+				$PREFIX/shadowsocks/shadowsocks rules	
+				exit 0
+   			fi
+   			let i++
+		done		
+	else
+		i=1
+		sed -i '/^$/d' $CHECK/shadowsocks/LAN_AC_OUT/lan_ac.list		
+		echo "please input your ips: "
+		while :
+		do
+   			read ip
+   			if [[ ${ip} != "" ]]  &> /dev/null && echo -e $INFO OK!
+   			then
+				get_lan_ip() {
+					cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
+						${ip}
+				EOF
+				}
+				echo $(get_lan_ip) >> $CHECK/shadowsocks/LAN_AC_OUT/lan_ac.list
+				grep -n '^$' $CHECK/shadowsocks/LAN_AC_OUT/lan_ac.list > /dev/null;echo $? > /tmp/null.log
+				null=`cat /tmp/null.log`
+				[ "$null" == "0" ] && exit 0
+   			else
+				echo -e $INFO OK!
+				sed -i '/\b$LAN_AC_OUT/s/^\s*#//' /opt/bin/ss-watchdog		
+				sed -i '/\w$WAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+				sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
+				sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog		
+				sleep 1
+				$PREFIX/shadowsocks/shadowsocks flush
+				$PREFIX/shadowsocks/shadowsocks rules	
+				exit 0
+   			fi
+   			let i++
+		done	
+	fi	
+	;;
+
+"off_on" )
+	echo -e "$ansi_white You want to close the proxy?(y/N)$ansi_std"
+	read choice	
+	if [ "${choice}" == "y" ]; then
+		$PREFIX/shadowsocks/shadowsocks flush
+	else
+		$PREFIX/shadowsocks/shadowsocks rules		
+	fi
+	;;
+	
+"mail" )
+	curl -s --connect-timeout 1 www.google.com &> /dev/null
+
+	if [ "$?" == "0" ]; then
+		echo -e "From: $FROM\nContent-Type: text/plain;\nSubject: $TITLE\n\n$CONTENT\nAt: `date -R`" > /tmp/mail.txt
+		cat /tmp/mail.txt | sendmail -v -Ssmtp.163.com -f$FROM -au$username -ap$password $TO &> /dev/null
+	fi
+	;;
+
+"help" )
+	shadowsocks
+	;;
+	
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.4.20 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.23 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
@@ -765,10 +1220,9 @@ uptest= none;
 	echo -e "$ansi_white   [update] Update chnroutes Routing Host $ansi_std"
 	echo -e "$ansi_white   [update_gfwlist] Update GFWLIST domain $ansi_std"
 	echo -e "$ansi_white   [check] Guardian ss-redir* $ansi_std"
-	echo -e "$ansi_white   [check_rules] Guardian iptables rules $ansi_std"
 	echo -e "$ansi_white   [ss_switch] Account switching $ansi_std"
-	echo -e "$ansi_white   [mult_switch] Multiple_switching $ansi_std"
-	echo -e "$ansi_white   [lan_ignore] LAN access control $ansi_std"
+	echo -e "$ansi_white   [wan_ac] WAN access control $ansi_std"	
+	echo -e "$ansi_white   [lan_ac] LAN access control $ansi_std"
 	echo -e "$ansi_white   [off_on] Turn off switch $ansi_std"
 	echo -e "$ansi_white   [update_scr] Update script $ansi_std"
 	echo -e "$ansi_white   [rebuild_scr] Rebuild script $ansi_std"	
