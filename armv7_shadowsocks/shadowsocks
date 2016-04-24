@@ -703,9 +703,9 @@ uptest= none;
 	if [ -f "$CHECK/ignore.list" ]; then
 		sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
 		/opt/etc/init.d/S99ss-rules start
-		sleep 1
-		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN	
-		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
+#		sleep 1
+#		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN	
+#		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
 	else
 		iptables-save | grep -v "gfw_black_list" | iptables-restore 2>/dev/null
 		ipset -X gfw_black_list 2>/dev/null	
@@ -718,10 +718,17 @@ uptest= none;
 	;;
 
 "global" )
-	echo -e "$ansi_white Do you really want to remove all build lists?(y/N)$ansi_std"
-	read choice
-	if [ "${choice}" == "y" ]; then
-		if [ -f "$CHECK/global.list" ]; then
+	yes_or_no() {
+		read -p "$1 ([y]es or [n]o): "
+		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
+			y|yes) echo "yes" ;;
+			*)     echo "no" ;;
+		esac
+	}
+
+	echo -e "$ansi_white Do you want to use global proxy?(y/N)$ansi_std"
+	if [ "yes" == $(yes_or_no) ]; then
+		if [ ! -f "$CHECK/global.list" ]; then
 			GLOBAL_LIST=$CHECK/global.list
 			cat > $GLOBAL_LIST <<-EOF
 			0.0.0.0/8
@@ -741,11 +748,10 @@ uptest= none;
 			240.0.0.0/4
 			255.255.255.255
 			EOF
-		fi
-		
-		sed -i 's/\$ignore_list/$global.list/' $CHECK/init.d/S99ss-rules
+		fi		
+		sed -i 's/\$ignore_list/$global_list/' /opt/bin/ss-watchdog
 	else
-		sed -i 's/\$global_list/$ignore.list/' $CHECK/init.d/S99ss-rules
+		sed -i 's/\$global_list/$ignore_list/' /opt/bin/ss-watchdog
 	fi
 
 	$PREFIX/shadowsocks/shadowsocks flush	
@@ -945,14 +951,14 @@ uptest= none;
 			echo '['$DATE'] No problem, the normal operation of pdnsd.' >> /var/log/pdnsd_watchdog.log 2>&1
 		fi
 	fi	
-
-	OLD_WAN_IP=`cat /var/log/wan_ipaddr.log`
-	if [ ! $OLD_WAN_IP == `nvram get wan_ppp_get_ip` ]; then
-		iptables -t nat -D SS_SPEC_WAN_AC -d `cat /var/log/wan_ipaddr.log` -j RETURN	
-		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN
-		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
-	fi
-	
+#
+#	OLD_WAN_IP=`cat /var/log/wan_ipaddr.log`
+#	if [ ! $OLD_WAN_IP == `nvram get wan_ppp_get_ip` ]; then
+#		iptables -t nat -D SS_SPEC_WAN_AC -d `cat /var/log/wan_ipaddr.log` -j RETURN	
+#		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN
+#		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
+#	fi
+#	
 	judge=$(cd $PREFIX/shadowsocks && ls | grep "ignore.list" | grep -v "grep")
 	if [ -z "$judge" ]; then
 		exit 0
@@ -970,16 +976,16 @@ uptest= none;
 	;;
 	
 "ss_switch" )
-	ask_yes_or_no() {
-    		read -p "$1 ([y]es or [n]o): "
-    		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
-        		y|yes) echo "yes" ;;
-        		*)     echo "no" ;;
-    		esac
+	yes_or_no() {
+		read -p "$1 ([y]es or [n]o): "
+		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
+			y|yes) echo "yes" ;;
+			*)     echo "no" ;;
+		esac
 	}
 	
-	echo -e $INFO Please select $BOLD server $NORM or $BOLD JSON file $NORM? "\033[4m yes \033[0m"  or "\033[4m no \033[0m"
-	if [ "yes" == $(ask_yes_or_no "Select JSON file?") ]; then
+	echo -e "$ansi_white Do you want to edit json file?(y/N)$ansi_std"
+	if [ "yes" == $(yes_or_no) ]; then
 		echo -e $INFO Creating JSON file...
 		rm -f $CHECK/shadowsocks.json
 
@@ -1200,7 +1206,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.4.23 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.24 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
