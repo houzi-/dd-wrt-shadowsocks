@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2015-2016 DD-WRT shadowsocks  
+# Copyright (C) 2015-2016 DD-WRT 
 # Copyright (C) 2015-2016 Jason Lin <wojiaolinmu008@gmail.com>
 # --------------------------------------------------------------------------------------------------------
 # This is free software, licensed under the GNU General Public License v3.
@@ -767,7 +767,15 @@ uptest= none;
 	if [ -f "$CHECK/ignore.list" ]; then
 		ss-rules -f
 	else
-		iptables-save | grep -v "gfw_black_list" | iptables-restore 2>/dev/null
+		iptables-save -c | \
+		sed -e 's/-A INPUT -m state -j ACCEPT/-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
+		-e 's/-A INPUT -i lo -m state -j ACCEPT/-A INPUT -i lo -m conntrack --ctstate NEW -j ACCEPT/' \
+		-e 's/-A INPUT -i br0 -m state -j ACCEPT/-A INPUT -i br0 -m conntrack --ctstate NEW -j ACCEPT/' \
+		-e 's/-A FORWARD -m state -j ACCEPT/-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
+		-e 's/-A FORWARD -i br0 -m state -j ACCEPT/-A FORWARD -i br0 -m conntrack --ctstate NEW -j ACCEPT/' | \
+		grep -v "gfw_black_list" | \
+		iptables-restore -c 2>/dev/null
+		
 		ipset -X gfw_black_list 2>/dev/null
 	fi	
 	sleep 1
@@ -908,7 +916,7 @@ uptest= none;
 	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"
-	service dnsmasq restart
+	/opt/etc/init.d/S56dnsmasq restart
 	;;	
 	
 "check" )
@@ -951,7 +959,7 @@ uptest= none;
 			echo '['$DATE'] No problem, the normal operation of pdnsd.' >> /var/log/pdnsd_watchdog.log 2>&1
 		fi
 	fi	
-#
+
 #	OLD_WAN_IP=`cat /var/log/wan_ipaddr.log`
 #	if [ ! $OLD_WAN_IP == `nvram get wan_ppp_get_ip` ]; then
 #		iptables -t nat -D SS_SPEC_WAN_AC -d `cat /var/log/wan_ipaddr.log` -j RETURN	
@@ -1206,10 +1214,10 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.4.24 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.25 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
-	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
+	echo -e "$ansi_green # Main author: Jason Lin && wojiaolinmu008 $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
 	echo -e "$ansi_green # This is free software, licensed under the GNU General Public License v3. $ansi_std"
