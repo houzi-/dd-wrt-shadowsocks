@@ -12,7 +12,6 @@
 
 TAG="SS_SPEC"          # iptables tag
 IPT="iptables -t nat"  # alias of iptables
-FWS=/var/log/iptables_restore.log
 
 usage() {
 	cat <<-EOF
@@ -156,15 +155,6 @@ gen_iplist() {
 EOF
 }
 
-gen_include() {
-	[ -f "$FWS" ] && return 0
-	cat > $FWS <<-EOF
-	$(iptables-save | grep -E "$TAG|^\*|^COMMIT" |\
-			sed -e "s/^-A \(OUTPUT\|PREROUTING\)/-I \1 1/")
-EOF
-	return $?
-}
-
 while getopts ":s:l:S:L:i:e:a:b:w:ouUfh" arg; do
 	case "$arg" in
 		s)
@@ -225,6 +215,6 @@ elif [ "$TPROXY" = 2 ]; then
 	: ${LOCAL_PORT:?"You must assign a port for the udp relay server."}
 fi
 
-flush_r && fw_rule && ipset_r && ac_rule && tp_rule && gen_include
+flush_r && fw_rule && ipset_r && ac_rule && tp_rule
 [ "$?" = 0 ] || logger 3 "Start failed!"
 exit $?
