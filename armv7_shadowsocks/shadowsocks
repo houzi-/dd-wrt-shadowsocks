@@ -1214,7 +1214,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.4.25 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.26 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Main author: Jason Lin && wojiaolinmu008 $ansi_std"
