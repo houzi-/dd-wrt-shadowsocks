@@ -57,7 +57,8 @@ flush_r() {
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	ipset -X ss_spec_lan_ac 2>/dev/null
-	ipset -X ss_spec_wan_ac 2>/dev/null	
+	ipset -X ss_spec_wan_ac 2>/dev/null
+	our_rule	
 	return 0
 }
 
@@ -76,14 +77,22 @@ EOF
 fw_rule() {
 	$IPT -N SS_SPEC_WAN_FW && \
 	$IPT -A SS_SPEC_WAN_FW -p tcp \
-		-j REDIRECT --to-ports $local_port 2>/dev/null && \
+		-j REDIRECT --to-ports $local_port 2>/dev/null || {
+		loger 3 "Can't redirect, please check the iptables."
+		exit 1
+	}
+	return $?
+}
+
+our_rule() {
 	$IPT -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` -p icmp \
 		-j DNAT --to-destination `nvram get lan_ipaddr` && \
 	$IPT -t nat -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` \
 		-j TRIGGER --trigger-type dnat  --trigger-proto all && \
 	$IPT -t nat -A POSTROUTING -s `nvram get lan_ipaddr | sed -e 's;1$;0/24;'` -o ppp0 \
 		-j SNAT --to-source `nvram get wan_ipaddr` && \
-	$IPT -t nat -A POSTROUTING -m mark --mark 0x80000000/0x80000000 -j MASQUERADE || {
+	$IPT -t nat -A POSTROUTING -m mark --mark 0x80000000/0x80000000 \
+		-j MASQUERADE 2>/dev/null || {
 		loger 3 "Can't redirect, please check the iptables."
 		exit 1
 	}
