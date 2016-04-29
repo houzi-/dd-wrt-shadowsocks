@@ -95,8 +95,8 @@ case ${1} in
 			mount -o bind $PREFIX/opt /opt
 			cd /opt && wget -O - http://pkg.entware.net/binaries/armv7/installer/entware_install.sh | sh
 			tar -czf /tmp/opt_backup_old.tar.gz -C $PREFIX opt			
-			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* reso* shadow* diff* dnscr* dnsma*
+			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/kmod* -a -e $SCRIPT_DIR/iptables* ]; then
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* resolvip_0.1* shadow* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -185,7 +185,7 @@ case ${1} in
 		echo -e $ansi_white"dnsmasq-full"$ansi_std
 	fi
 	
-	find $BIN/chinadns $BIN/Pcap_DNSProxy $BIN/ss-redir $BIN/resolvip $BIN/pdnsd-ctl $BIN/diff $BIN/dnscrypt-proxy $BIN/crontab $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/diff.txt
+	find $BIN/chinadns $BIN/Pcap_DNSProxy $BIN/ss-redir $BIN/resolvip $BIN/pdnsd-ctl $BIN/diff $BIN/dnscrypt-proxy $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/diff.txt
 	DIFF=`sed -n '1p' /var/log/diff.txt`
 	diff -w /var/log/find.txt /var/log/find_N.txt | grep \^\< > /var/log/diff_show.txt
 	if [ "$DIFF" == "0" ]; then
@@ -370,10 +370,10 @@ uptest= none;
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
-		nvram cron_jobs="$CRON"
+		nvram set cron_jobs="$CRON"
 		nvram commit
 		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq		
+		stopservice dnsmasq && startservice dnsmasq			
 
 #		shadowsocks temp
 #	
@@ -466,10 +466,10 @@ uptest= none;
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
-		nvram cron_jobs="$CRON"
+		nvram set cron_jobs="$CRON"
 		nvram commit
 		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq		
+		stopservice dnsmasq && startservice dnsmasq			
 
 #		shadowsocks temp		
 #		
@@ -540,10 +540,10 @@ uptest= none;
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
-		nvram cron_jobs="$CRON"
+		nvram set cron_jobs="$CRON"
 		nvram commit
 		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq		
+		stopservice dnsmasq && startservice dnsmasq			
 
 #		shadowsocks temp		
 #		
@@ -609,10 +609,10 @@ uptest= none;
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
-		nvram cron_jobs="$CRON"
+		nvram set cron_jobs="$CRON"
 		nvram commit
 		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq		
+		stopservice dnsmasq && startservice dnsmasq			
 
 #		shadowsocks temp
 #		
@@ -681,11 +681,11 @@ uptest= none;
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
-		nvram cron_jobs="$CRON"
+		nvram set cron_jobs="$CRON"
 		nvram commit
 		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq
-		
+		stopservice dnsmasq && startservice dnsmasq		
+
 #		shadowsocks temp
 #		
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -825,7 +825,7 @@ uptest= none;
 		cd $PREFIX/shadowsocks && mkdir dnsmasq.d
 	fi
 
-	if [ -f "$PREFIX/shadowsocks/ignore.list" ]; then
+	if [ -f "$CHECK/ignore.list" ]; then
 		rm -f $CHECK/ignore.list
 	fi
 
@@ -1244,7 +1244,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.4.27 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.30 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
