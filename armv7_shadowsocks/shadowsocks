@@ -365,8 +365,8 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/1 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/1 * * * * root echo \"\" > /var/log/pdnsd_watchdog.log" \
+		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\n*/30 * * * * root echo \"\" > /var/log/pdnsd_watchdog.log" \
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
@@ -460,9 +460,9 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/1 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/1 * * * * root echo \"\" > /var/log/pdnsd_watchdog.log\
-		\n*/1 * * * * root echo \"\" > /var/log/chinadns_watchdog.log" \
+		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\n*/30 * * * * root echo \"\" > /var/log/pdnsd_watchdog.log\
+		\n*/30 * * * * root echo \"\" > /var/log/chinadns_watchdog.log" \
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
@@ -534,9 +534,9 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/1 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/1 * * * * root echo \"\" > /var/log/dnscrypt-proxy_watchdog.log\
-		\n*/1 * * * * root echo \"\" > /var/log/chinadns_watchdog.log" \
+		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\n*/30 * * * * root echo \"\" > /var/log/dnscrypt-proxy_watchdog.log\
+		\n*/30 * * * * root echo \"\" > /var/log/chinadns_watchdog.log" \
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
@@ -604,8 +604,8 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/1 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/1 * * * * root echo \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
+		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\n*/30 * * * * root echo \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
@@ -677,7 +677,7 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/1 * * * * root echo \"\" > /var/log/chinadns.log" \
+		\n*/30 * * * * root echo \"\" > /var/log/chinadns.log" \
 		> /var/log/cron.txt
 		sed -i 's/[\t]*//g' /var/log/cron.txt
 		CRON=`sed -e '' /var/log/cron.txt`
