@@ -168,7 +168,7 @@ case ${1} in
 	else
 		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
 	fi
-	cd /
+	cd /tmp/root
 	
 	find $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/sbin.txt
 	sbin=`sed -n '1p' /var/log/sbin.txt`
@@ -858,7 +858,7 @@ uptest= none;
 		rm -f $CHECK/pcap-dnsproxy/Routing.txt $CHECK/pcap-dnsproxy/WhiteList.txt
 
 		# Update Local Hosts
-		cd /tmp;curl -s --insecure -O $china_domain_list;cd /
+		cd /tmp;curl -s --insecure -O $china_domain_list;cd /tmp/root
 		echo -e '[Local Hosts]' >> /tmp/WhiteList.txt
 		echo -e '## China mainland domains' >> /tmp/WhiteList.txt
 		echo -e '## Get the latest database: https://github.com/xinhugo/Free-List/blob/master/WhiteList.txt' >> /tmp/WhiteList.txt
@@ -870,7 +870,7 @@ uptest= none;
 		sed -i 's|b\(cn\)$|\.\1|' /tmp/WhiteList_tmp.txt
 		cat /tmp/WhiteList_tmp.txt >> /tmp/WhiteList.txt
 
-		cd /tmp;curl -s --insecure -O $china_google_list;cd /
+		cd /tmp;curl -s --insecure -O $china_google_list;cd /tmp/root
 		sed 's|/114.114.114.114$||' /tmp/google.china.conf > /tmp/WhiteList_tmp.txt
 		sed -i 's|\(\.\)|\\\1|g' /tmp/WhiteList_tmp.txt
 		sed -i 's|server=/|.*\\\b|' /tmp/WhiteList_tmp.txt
@@ -907,7 +907,7 @@ uptest= none;
 		rm -f /tmp/Routing_IPv4.txt /tmp/Routing_IPv4_tmp.txt /tmp/Routing_IPv6.txt /tmp/Routing_IPv6_tmp.txt /tmp/Routing.txt
 	else
 		wget -q -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
-		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /
+		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /tmp/root
 		cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
 		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
 		sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
@@ -947,7 +947,7 @@ uptest= none;
 		
 	DNS=127.0.0.1#1054
 		
-	wget -q -t0 -O $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf $gfw_block_list
+	cd $PREFIX/shadowsocks/dnsmasq.d;curl -s --insecure -O $gfw_block_list;cd /tmp/root
 		
 	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
 	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
@@ -1244,7 +1244,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.4.30 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.5.1 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
