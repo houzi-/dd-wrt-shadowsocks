@@ -8,7 +8,7 @@
 #
 
 #debug
-set -x
+#set -x
 
 TAG="SS_SPEC"          # iptables tag
 IPT="iptables -t nat"  # alias of iptables
