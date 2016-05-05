@@ -168,7 +168,7 @@ case ${1} in
 	else
 		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
 	fi
-	cd /tmp/root
+	cd /
 	
 	find $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/sbin.txt
 	sbin=`sed -n '1p' /var/log/sbin.txt`
@@ -744,22 +744,9 @@ uptest= none;
 	;;
 	
 "rules" )
-	if [ -f "$CHECK/ignore.list" ]; then
-		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
-		sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
-		/opt/etc/init.d/S99ss-rules start
-#		sleep 1
-#		iptables -t nat -I SS_SPEC_WAN_AC 1 -d `nvram get wan_ipaddr` -j RETURN	
-#		nvram get wan_ipaddr > /var/log/wan_ipaddr.log
-	else
-		iptables-save | grep -v "gfw_black_list" | iptables-restore 2>/dev/null
-		ipset -X gfw_black_list 2>/dev/null	
-		ipset -N gfw_black_list hash:ip
-		iptables -t nat -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
-			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
-		iptables -t nat -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \ 
-			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
-	fi		
+	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
+	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
+	/opt/etc/init.d/S99ss-rules start		
 	;;
 
 "global" )
@@ -809,12 +796,7 @@ uptest= none;
 	
 "flush" )
 	echo -e -n "$ansi_white Flush_iptables... "
-	if [ -f "$CHECK/ignore.list" ]; then
-		ss-rules -f
-	else
-		iptables-save | grep -v "gfw_black_list" | iptables-restore 2>/dev/null
-		ipset -X gfw_black_list 2>/dev/null
-	fi	
+	ss-rules -f	
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;
@@ -1244,7 +1226,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.5.1 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.4.30 $ansi_std"
 	echo -e "$ansi_green # Version: V1.0-1 (ARM beta version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
