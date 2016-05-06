@@ -54,11 +54,8 @@ SHADOWSOCKS="$ansi_white SHADOWSOCKS: "
 START_SCRIPT="$ansi_white START_SCRIPT: "
 ShadowSocks_Account="$ansi_white ShadowSocks_Account: "
 DNSMASQ="$ansi_white DNSMASQ: "
-ZONEINFO_ASIA="$ansi_white ZONEINFO_ASIA: "
-mult_switch="$ansi_white mult_switch: "
 ss_switch="$ansi_white ss_switch: "
-update_scr="$ansi_white update_scr: "
-rebuild_scr="$ansi_white rebuild_scr: "
+restore_scr="$ansi_white rebuild_scr: "
 
 # You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
 PREFIX=/jffs
@@ -299,6 +296,7 @@ Your Choice:"
 		sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
 
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
+		sed -i 's/PROCS=ss-watchdog/PROCS=ss-rules/;s/^ARGS=""/ARGS="-G"/' $CHECK/init.d/S99ss-rules		
 		
 		$PREFIX/shadowsocks/shadowsocks modules
 		$PREFIX/shadowsocks/shadowsocks run		
@@ -1251,8 +1249,7 @@ uptest= none;
 	echo -e "$ansi_white   [wan_ac] WAN access control $ansi_std"	
 	echo -e "$ansi_white   [lan_ac] LAN access control $ansi_std"
 	echo -e "$ansi_white   [off_on] Turn off switch $ansi_std"
-	echo -e "$ansi_white   [update_scr] Update script $ansi_std"
-	echo -e "$ansi_white   [rebuild_scr] Rebuild script $ansi_std"	
+	echo -e "$ansi_white   [restore_scr] Restore script $ansi_std"
 	echo -e "$ansi_white   [mail] Send shadowsocks running information $ansi_std"
 	echo -e "$ansi_white   [help] Script help $ansi_std"
 	echo -e "$ansi_white ===================================================================== $ansi_std"
