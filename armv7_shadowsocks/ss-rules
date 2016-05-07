@@ -230,7 +230,7 @@ while getopts ":s:l:S:L:i:e:a:b:w:ouUGfh" arg; do
 done
 
 if [ "$GFWLIST" = 1 ]; then
-	logger [GFWLIST] ok
+	:	
 else
 	if [ -z "$server" -o -z "$local_port" ]; then
 		usage 2
@@ -247,10 +247,10 @@ fi
 
 if [ -f "$IGNORE_LIST" ]; then
 	flush_r && fw_rule && ipset_r && ac_rule && tp_rule
-	[ "$?" = 0 ] || logger 3 "Start failed!"
+	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
 	exit $?
 else
 	flush_r
-	[ "$?" = 0 ] || logger 3 "Start failed!"
+	[ "$?" = 0 ] && loger 6 "Load gfwlist successful" || loger 3 "Start failed!"
 	exit $?
 fi
