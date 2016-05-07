@@ -279,7 +279,7 @@ case ${1} in
 		echo -e $INFO Re-setting...
   		echo -e $INFO Exiting...
 		rm -f $CHECK/shadowsocks.json
-  		exit 0 
+  		kill `ps | grep "shadowsocks" | grep -v "grep" | awk '{print $1}'` 
 	fi		
 
 echo -e $INFO "Please select Please choose the following programs:\n\
