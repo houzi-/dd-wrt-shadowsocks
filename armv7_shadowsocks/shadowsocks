@@ -55,7 +55,8 @@ START_SCRIPT="$ansi_white START_SCRIPT: "
 ShadowSocks_Account="$ansi_white ShadowSocks_Account: "
 DNSMASQ="$ansi_white DNSMASQ: "
 ss_switch="$ansi_white ss_switch: "
-restore_scr="$ansi_white rebuild_scr: "
+update_scr="$ansi_white update_scr: "
+backup="$ansi_white backup: "
 
 # You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
 PREFIX=/jffs
@@ -76,7 +77,7 @@ china_google_list="https://raw.githubusercontent.com/felixonmars/dnsmasq-china-l
 
 case ${1} in
 
-"set_up" )
+-su | --set_up)
 	DECIVE=$(cat /proc/cpuinfo | grep "ARMv7" | grep -v "grep")
 	if [ -z "$DECIVE" ]; then
 		echo -e -n $PLATFORM
@@ -118,10 +119,10 @@ case ${1} in
 		echo >> $autorun
 		echo "if [ -f /tmp/ppp/options.pppoe ]; then" >> $autorun
 		echo -e "	mount -o bind $PREFIX/opt /opt" >> $autorun
-		echo "	/opt/bin/shadowsocks modules" >> $autorun
-		echo "	/opt/bin/shadowsocks run" >> $autorun
+		echo "	/opt/bin/shadowsocks -m" >> $autorun
+		echo "	/opt/bin/shadowsocks -S" >> $autorun
 		echo "	sleep 1" >> $autorun
-		echo "	/opt/bin/shadowsocks rules" >> $autorun		
+		echo "	/opt/bin/shadowsocks -r" >> $autorun		
 		echo "fi" >> $autorun
 		echo >> $autorun
 
@@ -165,7 +166,7 @@ case ${1} in
 	else
 		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
 	fi
-	cd /tmp/root
+	cd /
 	
 	find $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/sbin.txt
 	sbin=`sed -n '1p' /var/log/sbin.txt`
@@ -279,7 +280,7 @@ case ${1} in
 		echo -e $INFO Re-setting...
   		echo -e $INFO Exiting...
 		rm -f $CHECK/shadowsocks.json
-  		kill `ps | grep "shadowsocks" | grep -v "grep" | awk '{print $1}'` 
+  		exit 0 
 	fi		
 
 echo -e $INFO "Please select Please choose the following programs:\n\
@@ -296,13 +297,13 @@ Your Choice:"
 		sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
 
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
-		sed -i 's/PROCS=ss-watchdog/PROCS=ss-rules/;s/^ARGS=""/ARGS="-G"/' $CHECK/init.d/S99ss-rules		
+		sed -i 's/PROCS=ss-watchdog/PROCS=ss-rules/;s/^ARGS=""/ARGS="-G"/' $CHECK/init.d/S99ss-rules 
 		
-		$PREFIX/shadowsocks/shadowsocks modules
-		$PREFIX/shadowsocks/shadowsocks run		
+		$PREFIX/shadowsocks/shadowsocks -m
+		$PREFIX/shadowsocks/shadowsocks -S		
 		sleep 1
-		$PREFIX/shadowsocks/shadowsocks rules
-		$PREFIX/shadowsocks/shadowsocks update_gfwlist
+		$PREFIX/shadowsocks/shadowsocks -r
+		$PREFIX/shadowsocks/shadowsocks -ug
 
 		echo -e $INFO Configuring ntp server...
 		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
@@ -321,7 +322,7 @@ Your Choice:"
 		nvram set cron_enable=0
 		echo -e "min-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
-		\min-port=4096\nrebind-localhost-ok\
+		\nmin-port=4096\nrebind-localhost-ok\
 		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
 		> /var/log/dnsmasq_custom.txt
 		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
@@ -420,11 +421,11 @@ uptest= none;
 
 		touch $PREFIX/shadowsocks/update.lock
 		touch $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks modules	
+		$PREFIX/shadowsocks/shadowsocks -m	
 		sleep 4
-		$PREFIX/shadowsocks/shadowsocks run
+		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
-		$PREFIX/shadowsocks/shadowsocks rules
+		$PREFIX/shadowsocks/shadowsocks -r
 
 		echo -e $INFO Configuring ntp server...
 		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
@@ -444,7 +445,7 @@ uptest= none;
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
-		\min-port=4096\nrebind-localhost-ok\
+		\nmin-port=4096\nrebind-localhost-ok\
 		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
 		> /var/log/dnsmasq_custom.txt
 		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
@@ -469,8 +470,6 @@ uptest= none;
 		stopservice cron && startservice cron
 		stopservice dnsmasq && startservice dnsmasq			
 
-#		shadowsocks temp		
-#		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
@@ -493,11 +492,11 @@ uptest= none;
 
 		touch $PREFIX/shadowsocks/update.lock
 		touch $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks modules	
+		$PREFIX/shadowsocks/shadowsocks -m
 		sleep 4
-		$PREFIX/shadowsocks/shadowsocks run
+		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
-		$PREFIX/shadowsocks/shadowsocks rules
+		$PREFIX/shadowsocks/shadowsocks -r
 
 		echo -e $INFO Configuring ntp server...
 		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
@@ -518,7 +517,7 @@ uptest= none;
 		\nproxy-dnssec\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
-		\min-port=4096\nrebind-localhost-ok\
+		\nmin-port=4096\nrebind-localhost-ok\
 		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
 		> /var/log/dnsmasq_custom.txt
 		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
@@ -542,9 +541,7 @@ uptest= none;
 		nvram commit
 		stopservice cron && startservice cron
 		stopservice dnsmasq && startservice dnsmasq			
-
-#		shadowsocks temp		
-#		
+		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
@@ -555,7 +552,6 @@ uptest= none;
 		sed -e "s/shadowsocks.json\"/shadowsocks.json\"/" -e "s/PROCS=ss-local/PROCS=ss-redir/" -i  $CHECK/init.d/S22shadowsocks
 
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S27pcap_dnsproxy (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
-		sed -i 's/^#\([ \t]\+iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353\)/\1/' $PREFIX/shadowsocks/shadowsocks
 	
 		local_dns=`cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 		sed -i "s/ 114.114.115.115:53/ $local_dns:53/" $CHECK/pcap-dnsproxy/Config.conf
@@ -563,11 +559,11 @@ uptest= none;
 		touch $PREFIX/shadowsocks/update.lock
 		touch $PREFIX/shadowsocks/chnroutes.lock
 		touch /var/log/pcap_dnsproxy.lock
-		$PREFIX/shadowsocks/shadowsocks modules
+		$PREFIX/shadowsocks/shadowsocks -m
 		sleep 4
-		$PREFIX/shadowsocks/shadowsocks run
+		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
-		$PREFIX/shadowsocks/shadowsocks rules
+		$PREFIX/shadowsocks/shadowsocks -r
 
 		echo -e $INFO Configuring ntp server...
 		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
@@ -588,7 +584,7 @@ uptest= none;
 		\nproxy-dnssec\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
-		\min-port=4096\nrebind-localhost-ok\
+		\nmin-port=4096\nrebind-localhost-ok\
 		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
 		> /var/log/dnsmasq_custom.txt
 		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
@@ -611,9 +607,7 @@ uptest= none;
 		nvram commit
 		stopservice cron && startservice cron
 		stopservice dnsmasq && startservice dnsmasq			
-
-#		shadowsocks temp
-#		
+	
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
@@ -637,11 +631,11 @@ uptest= none;
 			
 		touch $PREFIX/shadowsocks/update.lock
 		touch $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks modules
+		$PREFIX/shadowsocks/shadowsocks -m
 		sleep 4
-		$PREFIX/shadowsocks/shadowsocks run
+		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
-		$PREFIX/shadowsocks/shadowsocks rules
+		$PREFIX/shadowsocks/shadowsocks -r
 
 		echo -e $INFO Configuring ntp server...
 		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
@@ -661,7 +655,7 @@ uptest= none;
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
-		\min-port=4096\nrebind-localhost-ok\
+		\nmin-port=4096\nrebind-localhost-ok\
 		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
 		> /var/log/dnsmasq_custom.txt
 		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
@@ -683,9 +677,7 @@ uptest= none;
 		nvram commit
 		stopservice cron && startservice cron
 		stopservice dnsmasq && startservice dnsmasq		
-
-#		shadowsocks temp
-#		
+		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
@@ -694,17 +686,17 @@ uptest= none;
 	fi	
 	;;	
 
-"modules" )
+-m | --modules)
 	echo -e -n "$ansi_white Load_Modules... "	
 	insmod /opt/lib/modules/xt_set.ko
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;
 	
-"run" )
+-S | --START)
 	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
 	
 	if [ -f "$PREFIX/shadowsocks/chnroutes.lock" ]; then
-		$PREFIX/shadowsocks/shadowsocks update
+		$PREFIX/shadowsocks/shadowsocks -u
 	else
 		echo '['$DATE'] Has loaded China route table.' > /var/log/chnroutes.log
 	fi
@@ -732,22 +724,22 @@ uptest= none;
 				else
 					/opt/etc/init.d/S22shadowsocks restart
 #					/opt/etc/init.d/S23ss-tunnel restart
-					$PREFIX/shadowsocks/shadowsocks flush
+					$PREFIX/shadowsocks/shadowsocks -f
 					sleep 2
-					$PREFIX/shadowsocks/shadowsocks rules
+					$PREFIX/shadowsocks/shadowsocks -r
 				fi
 			done
 		done
 	fi
 	;;
 	
-"rules" )
+-r | --rules)
 	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
 	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
 	/opt/etc/init.d/S99ss-rules start		
 	;;
 
-"global" )
+-g | --global)
 	yes_or_no() {
 		read -p "$1 ([y]es or [n]o): "
 		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
@@ -784,22 +776,22 @@ uptest= none;
 		sed -i 's/\$global_list/$ignore_list/' /opt/bin/ss-watchdog
 	fi
 
-	$PREFIX/shadowsocks/shadowsocks flush	
-	$PREFIX/shadowsocks/shadowsocks rules	
+	$PREFIX/shadowsocks/shadowsocks -f	
+	$PREFIX/shadowsocks/shadowsocks -r	
 	
 	echo -e -n "$ansi_white Global... "	
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;	
 	
-"flush" )
+-f | --flush)
 	echo -e -n "$ansi_white Flush_iptables... "
 	ss-rules -f	
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;
 
-"update" )
+-u | --update)
 	directory=$(cd $PREFIX/shadowsocks && ls | grep "dnsmasq.d" | grep -v "grep")
 	if [ -z "$directory" ]; then
 		cd $PREFIX/shadowsocks && mkdir dnsmasq.d
@@ -901,15 +893,15 @@ uptest= none;
 	else
 		if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
 			/opt/etc/init.d/S27pcap-dnsproxy restart
-			$PREFIX/shadowsocks/shadowsocks flush
+			$PREFIX/shadowsocks/shadowsocks -f
 			sleep 1
-			$PREFIX/shadowsocks/shadowsocks rules
+			$PREFIX/shadowsocks/shadowsocks -r
 			stopservice dnsmasq && startservice dnsmasq	
 		else
 			/opt/etc/init.d/S24chinadns restart
-			$PREFIX/shadowsocks/shadowsocks flush
+			$PREFIX/shadowsocks/shadowsocks -f
 			sleep 1
-			$PREFIX/shadowsocks/shadowsocks rules
+			$PREFIX/shadowsocks/shadowsocks -r
 			stopservice dnsmasq && startservice dnsmasq
 		fi
 	fi
@@ -918,7 +910,7 @@ uptest= none;
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;	
 	
-"update_gfwlist" )
+-ug | --update_gfwlist)
 	echo -e -n "$ansi_white Updating gfwlist... "
 	directory=$(cd $PREFIX/shadowsocks && ls | grep "dnsmasq.d" | grep -v "grep")
 	if [ -z "$directory" ]; then
@@ -936,7 +928,7 @@ uptest= none;
 	stopservice dnsmasq && startservice dnsmasq
 	;;	
 	
-"check" )
+-c | --check)
 	SHADOWSOCKS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -f "/var/log/shadowsocks.lock" ]; then
 		if [ -z "$SHADOWSOCKS" ]; then
@@ -993,7 +985,7 @@ uptest= none;
 	fi
 	;;
 	
-"ss_switch" )
+-sw | --ss_switch)
 	yes_or_no() {
 		read -p "$1 ([y]es or [n]o): "
 		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
@@ -1100,11 +1092,11 @@ uptest= none;
 		fi
 	fi
 
-	$PREFIX/shadowsocks/shadowsocks run
-	/opt/etc/init.d/S56dnsmasq restart
+	$PREFIX/shadowsocks/shadowsocks -S
+	stopservice dnsmasq && startservice dnsmasq
 	;;	
 
-"wan_ac" )
+-wa | --wan_ac)
 	echo -e "$ansi_white Allow list within?(y/N)$ansi_std"
 	read choice
 	if [ "${choice}" == "y" ]; then
@@ -1113,20 +1105,20 @@ uptest= none;
 		sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 		sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 		sleep 1
-		$PREFIX/shadowsocks/shadowsocks flush
-		$PREFIX/shadowsocks/shadowsocks rules		
+		$PREFIX/shadowsocks/shadowsocks -f
+		$PREFIX/shadowsocks/shadowsocks -r		
 	else
 		sed -i '/\$WAN_AC_OUT/s/^\s*#//' /opt/bin/ss-watchdog		
 		sed -i '/\w$WAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 		sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 		sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 		sleep 1
-		$PREFIX/shadowsocks/shadowsocks flush
-		$PREFIX/shadowsocks/shadowsocks rules
+		$PREFIX/shadowsocks/shadowsocks -f
+		$PREFIX/shadowsocks/shadowsocks -r
 	fi		
 	;;
 
-"lan_ac" )
+-la | --lan_ac)
 	echo -e "-------$BOLD[IP]$NORM-----------$BOLD[MAC]$NORM--------------"
 	arp -vn -i br0 | awk '{gsub(/[()]|at/,"");NF-=3}1'
 	echo "-----------------------------------------"	
@@ -1158,8 +1150,8 @@ uptest= none;
 				sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 				sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 				sleep 1
-				$PREFIX/shadowsocks/shadowsocks flush
-				$PREFIX/shadowsocks/shadowsocks rules	
+				$PREFIX/shadowsocks/shadowsocks -f
+				$PREFIX/shadowsocks/shadowsocks -r	
 				exit 0
    			fi
    			let i++
@@ -1189,8 +1181,8 @@ uptest= none;
 				sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
 				sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog		
 				sleep 1
-				$PREFIX/shadowsocks/shadowsocks flush
-				$PREFIX/shadowsocks/shadowsocks rules	
+				$PREFIX/shadowsocks/shadowsocks -f
+				$PREFIX/shadowsocks/shadowsocks -r	
 				exit 0
    			fi
    			let i++
@@ -1198,17 +1190,72 @@ uptest= none;
 	fi	
 	;;
 
-"off_on" )
+-of | --off_on)
 	echo -e "$ansi_white You want to close the proxy?(y/N)$ansi_std"
 	read choice	
 	if [ "${choice}" == "y" ]; then
-		$PREFIX/shadowsocks/shadowsocks flush
+		$PREFIX/shadowsocks/shadowsocks -f
 	else
-		$PREFIX/shadowsocks/shadowsocks rules		
+		$PREFIX/shadowsocks/shadowsocks -r	
 	fi
 	;;
+
+-us | --update_scr)	
+	yes_or_no() {
+    		read -p "$1 ([y]es or [n]o): "
+    		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
+        		y|yes) echo "yes" ;;
+        		*)     echo "no" ;;
+    		esac
+	}
 	
-"mail" )
+	SCRIPT_INSTALL=$(cd ${SCRIPT_DIR} && cd .. && pwd)	
+	
+	if [ ! "$SCRIPT_DIR" == "$PREFIX" ]; then
+		sed -i 's;PREFIX='"$PREFIX"';PREFIX='"$SCRIPT_INSTALL"';' $SCRIPT_DIR/shadowsocks
+	fi	
+	
+	echo -e $INFO Choose $BOLD CHNROUTES or GFWLIST $NORM? "\033[4m yes \033[0m"  or "\033[4m no \033[0m"
+	if [ "yes" == $(yes_or_no "CHNROUTES?") ]; then 
+		if [ "yes" == $(yes_or_no "ss-redir?") ]; then
+			echo -e $INFO Is updating the script......				
+			if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
+				sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S27pcap-dnsproxy (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks 
+			else
+				sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
+				[ -f "/var/log/pdnsd.lock" ] && sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
+				[ -f "/var/log/dnscrypt-proxy.lock" ] && sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S29dnscrypt-proxy (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
+			fi
+		else
+			echo -e $INFO Is updating the script......
+			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S23ss-tunnel (start|restart))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
+			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
+		fi
+	else
+		echo -e $INFO Is updating the script......
+		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
+	fi
+	
+	echo -e -n $update_scr
+	sleep 1 
+	echo -e "$ansi_green PASS. $ansi_std"	
+	;;
+
+-b | --backup)
+	echo -e "$ansi_white You want to backup entware?(y/N)$ansi_std"
+	read choice	
+	if [ "${choice}" == "y" ]; then
+		tar -czf /tmp/entware_backup.tar.gz -C $PREFIX opt
+		[ ! -d "$PREFIX/shadowsocks/entware_backup" ] && mkdir -p $PREFIX/shadowsocks/entware_backup
+		cp /tmp/entware_backup.tar.gz $PREFIX/shadowsocks/entware_backup/
+	fi
+	
+	echo -e -n $backup
+	sleep 1 
+	echo -e "$ansi_green PASS. $ansi_std"	
+	;;
+	
+-e | --email)
 	curl -s --connect-timeout 1 www.google.com &> /dev/null
 
 	if [ "$?" == "0" ]; then
@@ -1217,17 +1264,16 @@ uptest= none;
 	fi
 	;;
 
-"help" )
+-h | --help)
 	shadowsocks
 	;;
 	
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.5.7 $ansi_std"
-	echo -e "$ansi_green # Version: V1.1-stable (ARM stable version) $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.5.14 $ansi_std"
+	echo -e "$ansi_green # Version: V1.2-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
-	echo -e "$ansi_green # Thanks: [@aa65535 @wojiaolinmu008 @tomato_shibby @asus_merlin @bwq518] $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
 	echo -e "$ansi_green # This is free software, licensed under the GNU General Public License v3. $ansi_std"
@@ -1235,23 +1281,23 @@ uptest= none;
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_white ===================================================================== $ansi_std"
 	echo -e "$ansi_blue WIKI: $ansi_std"
-	echo -e "$ansi_white   [set_up] Set ShadowSocks and ChinaDNS $ansi_std"
-	echo -e "$ansi_white   [modules] Loading module and ipset rule $ansi_std"
-	echo -e "$ansi_white   [run] Running ShadowSocks and ChinaDNS $ansi_std"	
-	echo -e "$ansi_white   [rules] Application Firewall Policy $ansi_std"
-	echo -e "$ansi_white   [global] Global Proxy $ansi_std"
-	echo -e "$ansi_white   [flush] Clear firewall policy $ansi_std"
-	echo -e "$ansi_white   [update] Update chnroutes Routing Host $ansi_std"
-	echo -e "$ansi_white   [update_gfwlist] Update GFWLIST domain $ansi_std"
-	echo -e "$ansi_white   [check] Guardian ss-redir* $ansi_std"
-	echo -e "$ansi_white   [check_ipt] Guardian iptables rules $ansi_std"
-	echo -e "$ansi_white   [ss_switch] Account switching $ansi_std"
-	echo -e "$ansi_white   [wan_ac] WAN access control $ansi_std"	
-	echo -e "$ansi_white   [lan_ac] LAN access control $ansi_std"
-	echo -e "$ansi_white   [off_on] Turn off switch $ansi_std"
-	echo -e "$ansi_white   [restore_scr] Restore script $ansi_std"
-	echo -e "$ansi_white   [mail] Send shadowsocks running information $ansi_std"
-	echo -e "$ansi_white   [help] Script help $ansi_std"
+	echo -e "$ansi_white   [-s/--set_up] Set ShadowSocks and ChinaDNS $ansi_std"
+	echo -e "$ansi_white   [-m/--modules] Loading module $ansi_std"
+	echo -e "$ansi_white   [-S/--START] Running ShadowSocks and ChinaDNS $ansi_std"
+	echo -e "$ansi_white   [-r/--rules] Application Firewall Policy $ansi_std"
+	echo -e "$ansi_white   [-g/--global] Global Proxy $ansi_std"
+	echo -e "$ansi_white   [-f/--flush] Clear firewall policy $ansi_std"
+	echo -e "$ansi_white   [-u/--update] Update chnroutes Routing Host $ansi_std"
+	echo -e "$ansi_white   [-ug/--update_gfwlist] Update GFWLIST domain $ansi_std"
+	echo -e "$ansi_white   [-c/--check] Guardian ss-redir* $ansi_std"
+	echo -e "$ansi_white   [-sw/--ss_switch] Account switching $ansi_std"
+	echo -e "$ansi_white   [-wa/--wan_ac] LAN access control $ansi_std"
+	echo -e "$ansi_white   [-la/--lan_ac] LAN access control $ansi_std"
+	echo -e "$ansi_white   [-of/--off_on] Turn off switch $ansi_std"
+	echo -e "$ansi_white   [-us/--update_scr] Update script $ansi_std"
+	echo -e "$ansi_white   [-b/--backup] Backup entware $ansi_std"	
+	echo -e "$ansi_white   [-e/--email] Send shadowsocks running information $ansi_std"
+	echo -e "$ansi_white   [-h/--help] Script help $ansi_std"
 	echo -e "$ansi_white ===================================================================== $ansi_std"
 	exit 
 	;;
