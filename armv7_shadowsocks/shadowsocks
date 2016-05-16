@@ -94,7 +94,8 @@ case ${1} in
 			cd /opt && wget -O - http://pkg.entware.net/binaries/armv7/installer/entware_install.sh | sh
 			tar -czf /tmp/opt_backup_old.tar.gz -C $PREFIX opt			
 			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/kmod* -a -e $SCRIPT_DIR/iptables* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* resolvip_0.1* shadow* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables*
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* resolvip_0.1* shadow* diff* dnscry* dnsmasq_2.75* ipset* iptables*
+				[ -f "/lib/modules/3.10.101/xt_set.ko" ] && : || opkg install --force-checksum kmod*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -166,7 +167,7 @@ case ${1} in
 	else
 		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
 	fi
-	cd /
+	cd /tmp/root
 	
 	find $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/sbin.txt
 	sbin=`sed -n '1p' /var/log/sbin.txt`
