@@ -7,6 +7,9 @@
 # See /LICENSE for more information.
 #
 
+# debug
+#set -x
+
 if [ ! -d "/opt/etc/shadowsocks" ]; then
 	mkdir -p /opt/etc/shadowsocks/WAN_AC_IN && \
 	mkdir -p /opt/etc/shadowsocks/WAN_AC_OUT && \

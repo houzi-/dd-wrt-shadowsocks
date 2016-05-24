@@ -21,8 +21,6 @@ usage() {
 
 		    -s <server_ip>          ip address of shadowsocks remote server
 		    -l <local_port>         port number of shadowsocks local server
-		    -S <server_ip>          ip address of shadowsocks remote UDP server
-		    -L <local_port>         port number of shadowsocks local UDP server
 		    -i <ip_list_file>       a file content is bypassed ip list
 		    -a <lan_ips>            lan ip of access control, need a prefix to
 		                            define access control mode
@@ -31,7 +29,6 @@ usage() {
 		    -e <extra_options>      extra options for iptables
 		    -o                      apply the rules to the OUTPUT chain
 		    -u                      enable udprelay mode, TPROXY is required
-		    -U                      enable udprelay mode, using different IP
 		                            and ports for TCP and UDP
 		    -G                      enable GFWLIST
 		    -f                      flush the rules
@@ -178,19 +175,13 @@ gen_iplist() {
 EOF
 }
 
-while getopts ":s:l:S:L:i:e:a:b:w:ouUGfh" arg; do
+while getopts ":s:l:i:e:a:b:w:ouGfh" arg; do
 	case "$arg" in
 		s)
 			server=$OPTARG
 			;;			
 		l)
 			local_port=$OPTARG
-			;;
-		S)
-			SERVER=$OPTARG
-			;;
-		L)
-			LOCAL_PORT=$OPTARG
 			;;
 		i)
 			IGNORE_LIST=$OPTARG
@@ -212,9 +203,6 @@ while getopts ":s:l:S:L:i:e:a:b:w:ouUGfh" arg; do
 			;;
 		u)
 			TPROXY=1
-			;;
-		U)
-			TPROXY=2
 			;;
 		G)
 			GFWLIST=1
@@ -240,12 +228,9 @@ fi
 if [ "$TPROXY" = 1 ]; then
 	SERVER=$server
 	LOCAL_PORT=$local_port
-elif [ "$TPROXY" = 2 ]; then
-	: ${SERVER:?"You must assign an ip for the udp relay server."}
-	: ${LOCAL_PORT:?"You must assign a port for the udp relay server."}
 fi
 
-if [ -f "$IGNORE_LIST" ]; then
+if [ -n "$IGNORE_LIST" ]; then
 	flush_r && fw_rule && ipset_r && ac_rule && tp_rule
 	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
 	exit $?
