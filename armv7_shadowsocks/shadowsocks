@@ -10,6 +10,13 @@
 
 # Debug 
 #set -x
+
+# opkg source site
+OPKG_SITE="http://entware.mirrors.ligux.com/binaries"
+
+# Architecture
+ARCH="armv7"
+
 # SMTP server (EP:"smtp.gmail.com")
 SMTP="smtp.163.com"
 # Send E-mail Username
@@ -24,12 +31,6 @@ TITLE="ShadowSocks"
 CONTENT="Your tools running over the wall!"
 # Target E-mail address
 TO=""
-
-# XIAOMI Fan Mode
-#xiaomi_fan=0
-
-# ADM ad filter
-#adm_filter=0
 
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
@@ -91,11 +92,10 @@ case ${1} in
 			cd $PREFIX;mkdir -p opt;mkdir -p shadowsocks;cd /;cd /tmp/root
 			cp $SCRIPT_DIR/shadowsocks $PREFIX/shadowsocks
 			mount -o bind $PREFIX/opt /opt
-			cd /opt && wget -O - http://pkg.entware.net/binaries/armv7/installer/entware_install.sh | sh
+			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh
 			tar -czf /tmp/opt_backup_old.tar.gz -C $PREFIX opt			
 			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/kmod* -a -e $SCRIPT_DIR/iptables* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* resolvip_0.1* shadow* diff* dnscry* dnsmasq_2.75* ipset* iptables*
-				[ -f "/lib/modules/3.10.101/xt_set.ko" ] && : || opkg install --force-checksum kmod*
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* resolvip_0.1* shadow* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -167,7 +167,7 @@ case ${1} in
 	else
 		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
 	fi
-	cd /tmp/root
+	cd /
 	
 	find $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/sbin.txt
 	sbin=`sed -n '1p' /var/log/sbin.txt`
@@ -241,7 +241,7 @@ case ${1} in
 	echo -e "Your Encryption Method: \033[41;37m ${method} \033[0m"
 	echo "============================================"
 
-	resolvip -t 10 ${IP} > /opt/var/log/resolvip_tmp.txt
+	ping -q -w1 ${IP} | grep "PING" | sed -e "s;).*;;" -e "s;.*(;;" > /opt/var/log/resolvip_tmp.txt
 	if [ `cat /opt/var/log/resolvip_tmp.txt | cut -d"." -f1` == `resolvip -t 10 192. | cut -d"." -f1` ] &> /dev/null; then
 		echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks set_up"$NORM
 		exit 0					
@@ -281,7 +281,7 @@ case ${1} in
 		echo -e $INFO Re-setting...
   		echo -e $INFO Exiting...
 		rm -f $CHECK/shadowsocks.json
-  		exit 0 
+		kill `ps | grep "shadowsocks" | grep -v "grep" | awk '{print $1}'` 
 	fi		
 
 echo -e $INFO "Please select Please choose the following programs:\n\
@@ -688,8 +688,12 @@ uptest= none;
 	;;	
 
 -m | --modules)
-	echo -e -n "$ansi_white Load_Modules... "	
-	insmod /opt/lib/modules/xt_set.ko
+	echo -e -n "$ansi_white Load_Modules... "
+	if [ -f "/lib/modules/$(cat /proc/version | sed -e 's; (.*;;' -e 's;Linux version ;;')/xt_set.ko" ]; then
+		insmod xt_set
+	else
+		insmod /opt/lib/modules/xt_set.ko
+	fi
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;
 	
@@ -715,7 +719,7 @@ uptest= none;
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-		/opt/etc/init.d/S10cron start
+#		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
 		for i in `cat /var/log/server.txt`;do
@@ -779,7 +783,8 @@ uptest= none;
 
 	$PREFIX/shadowsocks/shadowsocks -f	
 	$PREFIX/shadowsocks/shadowsocks -r	
-	
+	stopservice dnsmasq && startservice dnsmasq	
+
 	echo -e -n "$ansi_white Global... "	
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"	
@@ -1016,7 +1021,7 @@ uptest= none;
 		echo -e "Your Encryption Method: \033[41;37m ${method} \033[0m"
 		echo "============================================"
 
-		resolvip -t 10 ${IP} > /opt/var/log/resolvip_tmp.txt
+		ping -q -w1 ${IP} | grep "PING" | sed -e "s;).*;;" -e "s;.*(;;" > /opt/var/log/resolvip_tmp.txt
 		if [ `cat /opt/var/log/resolvip_tmp.txt | cut -d"." -f1` == `resolvip -t 10 192. | cut -d"." -f1` ] &> /dev/null; then
 			echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks ss_switch"$NORM				
 			exit 0					
@@ -1064,7 +1069,7 @@ uptest= none;
 		echo -e "Your Server IP: \033[41;37m ${IP} \033[0m"
 		echo "============================================"
 
-		resolvip -t 10 ${IP} > /opt/var/log/resolvip_tmp.txt
+		ping -q -w1 ${IP} | grep "PING" | sed -e "s;).*;;" -e "s;.*(;;" > /opt/var/log/resolvip_tmp.txt
 		if [ `cat /opt/var/log/resolvip_tmp.txt | cut -d"." -f1` == `resolvip -t 10 192. | cut -d"." -f1` ] &> /dev/null; then
 			echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks mult_switch"$NORM				
 			exit 0					
@@ -1095,100 +1100,30 @@ uptest= none;
 
 	$PREFIX/shadowsocks/shadowsocks -S
 	stopservice dnsmasq && startservice dnsmasq
-	;;	
-
--wa | --wan_ac)
-	echo -e "$ansi_white Allow list within?(y/N)$ansi_std"
-	read choice
-	if [ "${choice}" == "y" ]; then
-		sed -i '/\w$WAN_AC_IN/s/^\s*#//' /opt/bin/ss-watchdog
-		sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-		sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-		sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-		sleep 1
-		$PREFIX/shadowsocks/shadowsocks -f
-		$PREFIX/shadowsocks/shadowsocks -r		
-	else
-		sed -i '/\$WAN_AC_OUT/s/^\s*#//' /opt/bin/ss-watchdog		
-		sed -i '/\w$WAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-		sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-		sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-		sleep 1
-		$PREFIX/shadowsocks/shadowsocks -f
-		$PREFIX/shadowsocks/shadowsocks -r
-	fi		
 	;;
 
--la | --lan_ac)
-	echo -e "-------$BOLD[IP]$NORM-----------$BOLD[MAC]$NORM--------------"
-	arp -vn -i br0 | awk '{gsub(/[()]|at/,"");NF-=3}1'
-	echo "-----------------------------------------"	
-	
-	echo -e "$ansi_white Allow list within?(y/N)$ansi_std"
+-lc | --lan_control)
+	echo -e "$ansi_white Allow list to proxy?(y/N)$ansi_std"
 	read choice
 	if [ "${choice}" == "y" ]; then
-		i=1
-		sed -i '/^$/d' $CHECK/shadowsocks/LAN_AC_IN/lan_ac.list		
-		echo "please input your ips: "
-		while :
-		do
-   			read ip
-   			if [[ ${ip} != "" ]]  &> /dev/null && echo -e $INFO OK!
-   			then
-				get_lan_ip() {
-					cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
-						${ip}
-				EOF
-				}
-				echo $(get_lan_ip) >> $CHECK/shadowsocks/LAN_AC_IN/lan_ac.list
-				grep -n '^$' $CHECK/shadowsocks/LAN_AC_IN/lan_ac.list > /dev/null;echo $? > /tmp/null.log
-				null=`cat /tmp/null.log`
-				[ "$null" == "0" ] && exit 0
-   			else
-				echo -e $INFO OK!
-				sed -i '/\w$LAN_AC_IN/s/^\s*#//' /opt/bin/ss-watchdog	
-				sed -i '/\$wWAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-				sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-				sed -i '/\b$LAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-				sleep 1
-				$PREFIX/shadowsocks/shadowsocks -f
-				$PREFIX/shadowsocks/shadowsocks -r	
-				exit 0
-   			fi
-   			let i++
-		done		
+		if [ -s /opt/etc/shadowsocks/LAN_AC_IN/lan_ac.list ]; then		
+			sed -i "s;B\$LAN_AC_OUT;W\$LAN_AC_IN;g" /opt/bin/ss-watchdog
+		fi
+		$PREFIX/shadowsocks/shadowsocks -f && \
+		$PREFIX/shadowsocks/shadowsocks -r
+		echo -e -n "$ansi_white List_in... "
+		sleep 1
+		echo -e "            $ansi_green done. $ansi_std"
 	else
-		i=1
-		sed -i '/^$/d' $CHECK/shadowsocks/LAN_AC_OUT/lan_ac.list		
-		echo "please input your ips: "
-		while :
-		do
-   			read ip
-   			if [[ ${ip} != "" ]]  &> /dev/null && echo -e $INFO OK!
-   			then
-				get_lan_ip() {
-					cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
-						${ip}
-				EOF
-				}
-				echo $(get_lan_ip) >> $CHECK/shadowsocks/LAN_AC_OUT/lan_ac.list
-				grep -n '^$' $CHECK/shadowsocks/LAN_AC_OUT/lan_ac.list > /dev/null;echo $? > /tmp/null.log
-				null=`cat /tmp/null.log`
-				[ "$null" == "0" ] && exit 0
-   			else
-				echo -e $INFO OK!
-				sed -i '/\b$LAN_AC_OUT/s/^\s*#//' /opt/bin/ss-watchdog		
-				sed -i '/\w$WAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-				sed -i '/\$WAN_AC_OUT/{/#/!s/^/#/}' /opt/bin/ss-watchdog
-				sed -i '/\w$LAN_AC_IN/{/#/!s/^/#/}' /opt/bin/ss-watchdog		
-				sleep 1
-				$PREFIX/shadowsocks/shadowsocks -f
-				$PREFIX/shadowsocks/shadowsocks -r	
-				exit 0
-   			fi
-   			let i++
-		done	
-	fi	
+		if [ -s /opt/etc/shadowsocks/LAN_AC_OUT/lan_ac.list ]; then		
+			sed -i "s;W\$LAN_AC_IN;B\$LAN_AC_OUT;g" /opt/bin/ss-watchdog
+		fi
+		$PREFIX/shadowsocks/shadowsocks -f && \
+		$PREFIX/shadowsocks/shadowsocks -r
+		echo -e -n "$ansi_white List_out... "
+		sleep 1
+		echo -e "            $ansi_green done. $ansi_std"
+	fi
 	;;
 
 -of | --off_on)
@@ -1272,8 +1207,8 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.5.14 $ansi_std"
-	echo -e "$ansi_green # Version: V1.2-stable (ARM version) $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.5.27 $ansi_std"
+	echo -e "$ansi_green # Version: V1.2-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
@@ -1282,7 +1217,7 @@ uptest= none;
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_white ===================================================================== $ansi_std"
 	echo -e "$ansi_blue WIKI: $ansi_std"
-	echo -e "$ansi_white   [-s/--set_up] Set ShadowSocks and ChinaDNS $ansi_std"
+	echo -e "$ansi_white   [-su/--set_up] Set ShadowSocks and ChinaDNS $ansi_std"
 	echo -e "$ansi_white   [-m/--modules] Loading module $ansi_std"
 	echo -e "$ansi_white   [-S/--START] Running ShadowSocks and ChinaDNS $ansi_std"
 	echo -e "$ansi_white   [-r/--rules] Application Firewall Policy $ansi_std"
@@ -1292,8 +1227,7 @@ uptest= none;
 	echo -e "$ansi_white   [-ug/--update_gfwlist] Update GFWLIST domain $ansi_std"
 	echo -e "$ansi_white   [-c/--check] Guardian ss-redir* $ansi_std"
 	echo -e "$ansi_white   [-sw/--ss_switch] Account switching $ansi_std"
-	echo -e "$ansi_white   [-wa/--wan_ac] LAN access control $ansi_std"
-	echo -e "$ansi_white   [-la/--lan_ac] LAN access control $ansi_std"
+	echo -e "$ansi_white   [-lc/--lan_control] LAN Device control $ansi_std"
 	echo -e "$ansi_white   [-of/--off_on] Turn off switch $ansi_std"
 	echo -e "$ansi_white   [-us/--update_scr] Update script $ansi_std"
 	echo -e "$ansi_white   [-b/--backup] Backup entware $ansi_std"	
