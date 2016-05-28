@@ -20,8 +20,8 @@ server_ip=`sed -n 's/.*ver": *"\(.*\)".*/\1/p' /opt/etc/shadowsocks.json`
 local_port=`sed -n 's/.*l_port": *\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
 ignore_list=/opt/etc/ignore.list
 global_list=/opt/etc/global.list
-wan_ac_list_in=/opt/etc/shadowsocks/WAN_AC_IN/wan_ac.list
-wan_ac_list_out=/opt/etc/shadowsocks/WAN_AC_OUT/wan_ac.list
+wan_ac_list_fw=/opt/etc/shadowsocks/WAN_AC_FW/wan_ac.list
+wan_ac_list_bp=/opt/etc/shadowsocks/WAN_AC_BP/wan_ac.list
 lan_ac_list_in=/opt/etc/shadowsocks/LAN_AC_IN/lan_ac.list
 lan_ac_list_out=/opt/etc/shadowsocks/LAN_AC_OUT/lan_ac.list
 
@@ -33,8 +33,8 @@ touch a $wan_ac_list_out
 touch a $lan_ac_list_in && \
 touch a $lan_ac_list_out
 
-WAN_AC_IN=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_in | xargs`
-WAN_AC_OUT=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_out | xargs`
+WAN_AC_FW=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_fw | xargs`
+WAN_AC_BP=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_bp | xargs`
 
 LAN_AC_IN=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $lan_ac_list_in | xargs`
 LAN_AC_OUT=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $lan_ac_list_out | xargs`

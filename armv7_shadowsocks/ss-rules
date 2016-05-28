@@ -58,7 +58,7 @@ flush_r() {
 	ipset -X gfw_black_list 2>/dev/null	
 	our_rule
 	if [ "$GFWLIST" = 1 ]; then
-		ipset -N gfw_black_list hash:ip
+		ipset -N gfw_black_list hash:ip hashsize 65536
 		$IPT -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
 		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
