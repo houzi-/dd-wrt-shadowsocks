@@ -72,9 +72,9 @@ CHECK=/opt/etc
 
 # Link
 gfw_block_list="https://raw.githubusercontent.com/koolshare/koolshare.github.io/master/maintain_files/gfwlist.conf"
-china_routing_list="http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest"
-china_domain_list="https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
-china_google_list="https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf"
+china_routing_list="http://entware.mirrors.ligux.com/apnic/delegated-apnic-latest"
+china_domain_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/accelerated-domains.china.conf"
+china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.china.conf"
 
 case ${1} in
 
@@ -94,8 +94,8 @@ case ${1} in
 			mount -o bind $PREFIX/opt /opt
 			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh
 			tar -czf /tmp/opt_backup_old.tar.gz -C $PREFIX opt			
-			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/kmod* -a -e $SCRIPT_DIR/iptables* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* resolvip_0.1* shadow* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables*
+			if [ -e $SCRIPT_DIR/china* -a -e $SCRIPT_DIR/dif* -a -e $SCRIPT_DIR/pcap_dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/resol* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsma* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/kmod* -a -e $SCRIPT_DIR/iptables* -a -e $SCRIPT_DIR/cron_4.1* ]; then
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadow* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables* cron_4.1*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -160,12 +160,12 @@ case ${1} in
 
 	BIN=/opt/bin
 	SBIN=/opt/sbin
-	echo -e "chinadns \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir \ndnsmasq" > /var/log/find.txt	
+	echo -e "chinadns \ncrontab \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir \ndnsmasq" > /var/log/find.txt	
 	cd $BIN
-	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f resolvip -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then	
-		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
+	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then	
+		ls -1 chinadns Pcap_DNSProxy ss-redir pdnsd-ctl diff dnscrypt-proxy crontab > /var/log/find_N.txt
 	else
-		ls -1 chinadns Pcap_DNSProxy ss-redir resolvip pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
+		ls -1 chinadns Pcap_DNSProxy ss-redir pdnsd-ctl diff dnscrypt-proxy crontab > /var/log/find_N.txt
 	fi
 	cd /
 	
@@ -184,7 +184,7 @@ case ${1} in
 		echo -e $ansi_white"dnsmasq-full"$ansi_std
 	fi
 	
-	find $BIN/chinadns $BIN/Pcap_DNSProxy $BIN/ss-redir $BIN/resolvip $BIN/pdnsd-ctl $BIN/diff $BIN/dnscrypt-proxy $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/diff.txt
+	find $BIN/chinadns $BIN/Pcap_DNSProxy $BIN/ss-redir $BIN/pdnsd-ctl $BIN/diff $BIN/dnscrypt-proxy $BIN/crontab $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/diff.txt
 	DIFF=`sed -n '1p' /var/log/diff.txt`
 	diff -w /var/log/find.txt /var/log/find_N.txt | grep \^\< > /var/log/diff_show.txt
 	if [ "$DIFF" == "0" ]; then
@@ -192,13 +192,13 @@ case ${1} in
 		sleep 1 
 		echo -e "$ansi_green PASS. $ansi_std"
 	else
-		if [ ! -e $BIN/chinadns -a ! -a ! -e $BIN/diff -a ! -e $BIN/Pcap_DNSProxy -a ! -e $BIN/pdnsd-ctl -a ! -e $BIN/resolvip -a ! -e $BIN/ss-redir -a ! -e $BIN/dnscrypt-proxy -a ! -e $SBIN/dnsmasq ]; then
+		if [ ! -e $BIN/chinadns -a ! -e $BIN/crontab -a ! -e $BIN/diff -a ! -e $BIN/Pcap_DNSProxy -a ! -e $BIN/pdnsd-ctl -a ! -e $BIN/ss-redir -a ! -e $BIN/dnscrypt-proxy -a ! -e $SBIN/dnsmasq ]; then
 			echo -e $DEPENDENCE
 			sleep 1
 			echo -e "$ansi_red ERROR. $ansi_std"
 			echo -e "$WARNING \n$BOLD Please install the following software:"$NORM
 			rm -rf $PREFIX/opt
-			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \nresolvip \ndiffutils \ndnscrypt-proxy \ndnsmasq"$ansi_std
+			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \nresolvip \ndiffutils \ncrontab \ndnscrypt-proxy \ndnsmasq"$ansi_std
 			exit 0
 		else	
 			echo -e $DEPENDENCE
@@ -306,29 +306,25 @@ Your Choice:"
 		$PREFIX/shadowsocks/shadowsocks -r
 		$PREFIX/shadowsocks/shadowsocks -ug
 
-		echo -e $INFO Configuring ntp server...
-		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
-		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
-		NTP=$PREFIX/shadowsocks/dnsmasq.d/ntp_server.conf
-		echo "server=/0.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/1.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/2.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/3.asia.pool.ntp.org/$DNS" >> $NTP
-		echo >> $NTP
-		rm -f $PREFIX/shadowsocks/dns.list
-
 		nvram set time_zone="Asia/Shanghai"
 
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
+		nvram commit
 		echo -e "min-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
-		> /var/log/dnsmasq_custom.txt
-		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
-		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"		
+		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\ninterface=`nvram get lan_ifname`\
+		\nresolv-file=/tmp/resolv.dnsmasq\
+		\ndhcp-leasefile=/tmp/dnsmasq.leases\
+		\ndhcp-lease-max=50\
+		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
+		\ndhcp-authoritative\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\nstop-dns-rebind" \
+		> $CHECK/dnsmasq.conf
+		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
 		
 		/opt/etc/init.d/S56dnsmasq restart
 		
@@ -363,20 +359,15 @@ uptest= none;
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"
 
-		echo -e $INFO Configuring crontab_custom...		
-		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/30 * * * * root echo \"\" > /var/log/pdnsd_watchdog.log" \
-		> /var/log/cron.txt
-		sed -i 's/[\t]*//g' /var/log/cron.txt
-		CRON=`sed -e '' /var/log/cron.txt`
-		nvram set cron_jobs="$CRON"
-		nvram commit
-		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq			
+		echo -e $INFO Configuring crontab_custom...
+		echo -e "shadowsocks -c" \
+		> $CHECK/cron.1mins/check.sh		
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\necho \"\" > /var/log/pdnsd_watchdog.log" \
+		> $CHECK/cron.5mins/clear.sh
+		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh
 
-#		shadowsocks temp
-#	
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"	
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -428,30 +419,28 @@ uptest= none;
 		sleep 2
 		$PREFIX/shadowsocks/shadowsocks -r
 
-		echo -e $INFO Configuring ntp server...
-		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
-		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
-		NTP=$PREFIX/shadowsocks/dnsmasq.d/ntp_server.conf
-		echo "server=/0.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/1.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/2.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/3.asia.pool.ntp.org/$DNS" >> $NTP
-		echo >> $NTP
-		rm -f $PREFIX/shadowsocks/dns.list
-
 		nvram set time_zone="Asia/Shanghai"		
 
-		echo -e $INFO Configuring dnsmasq_custom...				
+		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
+		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
-		> /var/log/dnsmasq_custom.txt
-		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
-		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"		
+		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\ninterface=`nvram get lan_ifname`\
+		\nresolv-file=/tmp/resolv.dnsmasq\
+		\ndhcp-leasefile=/tmp/dnsmasq.leases\
+		\ndhcp-lease-max=50\
+		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
+		\ndhcp-authoritative\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\nstop-dns-rebind" \
+		> $CHECK/dnsmasq.conf
+		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
+
+		/opt/etc/init.d/S56dnsmasq restart
 		
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -459,17 +448,14 @@ uptest= none;
 		nvram set rc_startup="$SCR"		
 
 		echo -e $INFO Configuring crontab_custom...		
-		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/30 * * * * root echo \"\" > /var/log/pdnsd_watchdog.log\
-		\n*/30 * * * * root echo \"\" > /var/log/chinadns_watchdog.log" \
-		> /var/log/cron.txt
-		sed -i 's/[\t]*//g' /var/log/cron.txt
-		CRON=`sed -e '' /var/log/cron.txt`
-		nvram set cron_jobs="$CRON"
-		nvram commit
-		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq			
+		echo -e "shadowsocks -c" \
+		> $CHECK/cron.1mins/check.sh		
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\necho \"\" > /var/log/pdnsd_watchdog.log\
+		\necho \"\" > /var/log/chinadns_watchdog.log" \
+		> $CHECK/cron.5mins/clear.sh
+		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh		
 
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
@@ -499,31 +485,28 @@ uptest= none;
 		sleep 2
 		$PREFIX/shadowsocks/shadowsocks -r
 
-		echo -e $INFO Configuring ntp server...
-		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
-		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
-		NTP=$PREFIX/shadowsocks/dnsmasq.d/ntp_server.conf
-		echo "server=/0.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/1.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/2.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/3.asia.pool.ntp.org/$DNS" >> $NTP
-		echo >> $NTP
-		rm -f $PREFIX/shadowsocks/dns.list
-
 		nvram set time_zone="Asia/Shanghai"
 
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
+		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
-		\nproxy-dnssec\
-		\nmin-cache-ttl=6000\ncache-size=10000\
+		\nmin-cache-ttl=6000\ncache-size=10000\nproxy-dnssec\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
-		> /var/log/dnsmasq_custom.txt
-		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
-		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"			
+		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\ninterface=`nvram get lan_ifname`\
+		\nresolv-file=/tmp/resolv.dnsmasq\
+		\ndhcp-leasefile=/tmp/dnsmasq.leases\
+		\ndhcp-lease-max=50\
+		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
+		\ndhcp-authoritative\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\nstop-dns-rebind" \
+		> $CHECK/dnsmasq.conf
+		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
+
+		/opt/etc/init.d/S56dnsmasq restart
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -531,17 +514,14 @@ uptest= none;
 		nvram set rc_startup="$SCR"	
 
 		echo -e $INFO Configuring crontab_custom...		
-		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/30 * * * * root echo \"\" > /var/log/dnscrypt-proxy_watchdog.log\
-		\n*/30 * * * * root echo \"\" > /var/log/chinadns_watchdog.log" \
-		> /var/log/cron.txt
-		sed -i 's/[\t]*//g' /var/log/cron.txt
-		CRON=`sed -e '' /var/log/cron.txt`
-		nvram set cron_jobs="$CRON"
-		nvram commit
-		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq			
+		echo -e "shadowsocks -c" \
+		> $CHECK/cron.1mins/check.sh		
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\necho \"\" > /var/log/dnscrypt-proxy_watchdog.log\
+		\necho \"\" > /var/log/chinadns_watchdog.log" \
+		> $CHECK/cron.5mins/clear.sh
+		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh			
 		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
@@ -566,48 +546,42 @@ uptest= none;
 		sleep 2
 		$PREFIX/shadowsocks/shadowsocks -r
 
-		echo -e $INFO Configuring ntp server...
-		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
-		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
-		NTP=$PREFIX/shadowsocks/dnsmasq.d/ntp_server.conf
-		echo "server=/0.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/1.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/2.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/3.asia.pool.ntp.org/$DNS" >> $NTP
-		echo >> $NTP
-		rm -f $PREFIX/shadowsocks/dns.list
-
 		nvram set time_zone="Asia/Shanghai"		
 
-		echo -e $INFO Configuring dnsmasq_custom...		
+		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
+		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
-		\nproxy-dnssec\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
-		> /var/log/dnsmasq_custom.txt
-		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
-		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"	
+		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\ninterface=`nvram get lan_ifname`\
+		\nresolv-file=/tmp/resolv.dnsmasq\
+		\ndhcp-leasefile=/tmp/dnsmasq.leases\
+		\ndhcp-lease-max=50\
+		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
+		\ndhcp-authoritative\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\nstop-dns-rebind" \
+		> $CHECK/dnsmasq.conf
+		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
+
+		/opt/etc/init.d/S56dnsmasq restart
 		
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"			
 
-		echo -e $INFO Configuring crontab_custom...		
-		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/30 * * * * root echo \"\" > /var/log/shadowsocks_watchdog.log\
-		\n*/30 * * * * root echo \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
-		> /var/log/cron.txt
-		sed -i 's/[\t]*//g' /var/log/cron.txt
-		CRON=`sed -e '' /var/log/cron.txt`
-		nvram set cron_jobs="$CRON"
-		nvram commit
-		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq			
+		echo -e $INFO Configuring crontab_custom...
+		echo -e "shadowsocks -c" \
+		> $CHECK/cron.1mins/check.sh		
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\necho \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
+		> $CHECK/cron.5mins/clear.sh
+		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh	
 	
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
@@ -638,46 +612,42 @@ uptest= none;
 		sleep 2
 		$PREFIX/shadowsocks/shadowsocks -r
 
-		echo -e $INFO Configuring ntp server...
-		cat /etc/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
-		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
-		NTP=$PREFIX/shadowsocks/dnsmasq.d/ntp_server.conf
-		echo "server=/0.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/1.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/2.asia.pool.ntp.org/$DNS" >> $NTP
-		echo "server=/3.asia.pool.ntp.org/$DNS" >> $NTP
-		echo >> $NTP
-		rm -f $PREFIX/shadowsocks/dns.list
-
 		nvram set time_zone="Asia/Shanghai"		
 		
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
+		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d" \
-		> /var/log/dnsmasq_custom.txt
-		sed -i 's/[\t]*//g' /var/log/dnsmasq_custom.txt
-		DNS_CUSTOM=`sed -e '' /var/log/dnsmasq_custom.txt`
-		nvram set dnsmasq_options="$DNS_CUSTOM"			
+		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\ninterface=`nvram get lan_ifname`\
+		\nresolv-file=/tmp/resolv.dnsmasq\
+		\ndhcp-leasefile=/tmp/dnsmasq.leases\
+		\ndhcp-lease-max=50\
+		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
+		\ndhcp-authoritative\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\nstop-dns-rebind" \
+		> $CHECK/dnsmasq.conf
+		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
+
+		/opt/etc/init.d/S56dnsmasq restart		
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"			
 
-		echo -e $INFO Configuring crontab_custom...		
-		echo -e "*/1 * * * * root /opt/bin/shadowsocks check\
-		\n*/30 * * * * root echo \"\" > /var/log/chinadns.log" \
-		> /var/log/cron.txt
-		sed -i 's/[\t]*//g' /var/log/cron.txt
-		CRON=`sed -e '' /var/log/cron.txt`
-		nvram set cron_jobs="$CRON"
-		nvram commit
-		stopservice cron && startservice cron
-		stopservice dnsmasq && startservice dnsmasq		
+		echo -e $INFO Configuring crontab_custom...
+		echo -e "shadowsocks -c" \
+		> $CHECK/cron.1mins/check.sh		
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		\necho \"\" > /var/log/chinadns_watchdog.log" \
+		> $CHECK/cron.5mins/clear.sh
+		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh	
 		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
@@ -689,10 +659,16 @@ uptest= none;
 
 -m | --modules)
 	echo -e -n "$ansi_white Load_Modules... "
-	if [ -f "/lib/modules/$(cat /proc/version | sed -e 's; (.*;;' -e 's;Linux version ;;')/xt_set.ko" ]; then
-		insmod xt_set
-	else
-		insmod /opt/lib/modules/xt_set.ko
+	if [ ! "`lsmod | grep xt_set | wc -l`" -eq 1 ]; then
+		if [ -f "/lib/modules/$(cat /proc/version | sed -e 's; (.*;;' -e 's;Linux version ;;')/xt_set.ko" ]; then
+			modprobe xt_set
+			if [ -f "/lib/modules/$(cat /proc/version | sed -e 's; (.*;;' -e 's;Linux version ;;')/xt_TPROXY.ko" ]; then
+				modprobe xt_socket && \
+				modprobe xt_TPROXY
+			fi
+		else
+			insmod /opt/lib/modules/xt_set.ko
+		fi
 	fi
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;
@@ -708,18 +684,19 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq
 		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
 		mount -o bind /opt/sbin/iptables-restore /usr/sbin/iptables-restore
 		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
 		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
+		stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq start
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-#		/opt/etc/init.d/S10cron start
+		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
 		for i in `cat /var/log/server.txt`;do
@@ -783,7 +760,7 @@ uptest= none;
 
 	$PREFIX/shadowsocks/shadowsocks -f	
 	$PREFIX/shadowsocks/shadowsocks -r	
-	stopservice dnsmasq && startservice dnsmasq	
+	stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart	
 
 	echo -e -n "$ansi_white Global... "	
 	sleep 1
@@ -902,13 +879,13 @@ uptest= none;
 			$PREFIX/shadowsocks/shadowsocks -f
 			sleep 1
 			$PREFIX/shadowsocks/shadowsocks -r
-			stopservice dnsmasq && startservice dnsmasq	
+			stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart	
 		else
 			/opt/etc/init.d/S24chinadns restart
 			$PREFIX/shadowsocks/shadowsocks -f
 			sleep 1
 			$PREFIX/shadowsocks/shadowsocks -r
-			stopservice dnsmasq && startservice dnsmasq
+			stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
 		fi
 	fi
 	echo -e -n "$ansi_white Updating chnroutes... "
@@ -931,7 +908,7 @@ uptest= none;
 	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"
-	stopservice dnsmasq && startservice dnsmasq
+	stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
 	;;	
 	
 -c | --check)
@@ -1099,7 +1076,7 @@ uptest= none;
 	fi
 
 	$PREFIX/shadowsocks/shadowsocks -S
-	stopservice dnsmasq && startservice dnsmasq
+	stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
 	;;
 
 -lc | --lan_control)
@@ -1126,14 +1103,43 @@ uptest= none;
 	fi
 	;;
 
--of | --off_on)
-	echo -e "$ansi_white You want to close the proxy?(y/N)$ansi_std"
-	read choice	
-	if [ "${choice}" == "y" ]; then
-		$PREFIX/shadowsocks/shadowsocks -f
-	else
-		$PREFIX/shadowsocks/shadowsocks -r	
-	fi
+-sa | --services_action)
+	case ${2} in
+		stop)
+			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} all service under /opt/etc/init.d?(y/N) $ansi_std"
+			read choice	
+			if [ "${choice}" == "y" ]; then
+				/opt/etc/init.d/rc.unslung ${2}
+				if [ "${2}" == "stop" ]; then
+					cp $CHECK/dnsmasq.conf $CHECK/dnsmasq.conf.bak
+					cp /tmp/etc/dnsmasq.conf $CHECK/dnsmasq.conf
+					$PREFIX/shadowsocks/shadowsocks -f
+					stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+				fi			
+			else
+				: ${warning:?"You do not have any operations."}
+			fi
+		;;
+
+		start)
+			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} all service under /opt/etc/init.d?(y/N) $ansi_std"
+			read choice	
+			if [ "${choice}" == "y" ]; then
+				if [ "${2}" == "start" ]; then
+					cp $CHECK/dnsmasq.conf.bak $CHECK/dnsmasq.conf
+					$PREFIX/shadowsocks/shadowsocks -f && \
+					$PREFIX/shadowsocks/shadowsocks -S && \
+					$PREFIX/shadowsocks/shadowsocks -r
+					stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+				fi
+			else
+				: ${warning:?"You do not have any operations."}
+			fi
+		;;
+ 
+	*)
+		echo -e "$ansi_white usage: [stop|start] $ansi_std"
+	esac
 	;;
 
 -us | --update_scr)	
@@ -1203,11 +1209,11 @@ uptest= none;
 -h | --help)
 	shadowsocks
 	;;
-	
+
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.5.27 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.2 $ansi_std"
 	echo -e "$ansi_green # Version: V1.3-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
@@ -1226,14 +1232,15 @@ uptest= none;
 	echo -e "$ansi_white   [-u/--update] Update chnroutes Routing Host $ansi_std"
 	echo -e "$ansi_white   [-ug/--update_gfwlist] Update GFWLIST domain $ansi_std"
 	echo -e "$ansi_white   [-c/--check] Guardian ss-redir* $ansi_std"
+	echo -e "$ansi_white   [-cr/--check_rules] Guardian iptables rules $ansi_std"
 	echo -e "$ansi_white   [-sw/--ss_switch] Account switching $ansi_std"
 	echo -e "$ansi_white   [-lc/--lan_control] LAN Device control $ansi_std"
-	echo -e "$ansi_white   [-of/--off_on] Turn off switch $ansi_std"
+	echo -e "$ansi_white   [-sa/--services_action] Change all state services $ansi_std"
 	echo -e "$ansi_white   [-us/--update_scr] Update script $ansi_std"
 	echo -e "$ansi_white   [-b/--backup] Backup entware $ansi_std"	
 	echo -e "$ansi_white   [-e/--email] Send shadowsocks running information $ansi_std"
 	echo -e "$ansi_white   [-h/--help] Script help $ansi_std"
 	echo -e "$ansi_white ===================================================================== $ansi_std"
-	exit 
+	exit
 	;;
 esac
