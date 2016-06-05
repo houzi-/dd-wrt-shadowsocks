@@ -690,7 +690,6 @@ uptest= none;
 		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
 		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
-		stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq start
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
@@ -1213,7 +1212,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.2 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.5 $ansi_std"
 	echo -e "$ansi_green # Version: V1.3-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"

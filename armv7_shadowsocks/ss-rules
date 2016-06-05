@@ -63,7 +63,8 @@ flush_r() {
 			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
 		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
-	fi	
+	fi
+	restore_dnsamsq	
 	return 0
 }
 
@@ -99,6 +100,11 @@ our_rule() {
 		-j SNAT --to-source `nvram get wan_ipaddr` && \
 	$IPT -t nat -A POSTROUTING -m mark --mark 0x80000000/0x80000000 \
 		-j MASQUERADE
+}
+
+restore_dnsamsq() {
+	stopservice dnsmasq && \
+	/opt/etc/init.d/S56dnsmasq start
 }
 
 ac_rule() {
