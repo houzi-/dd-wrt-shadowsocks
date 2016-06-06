@@ -63,7 +63,7 @@ update_scr="$ansi_white update_scr: "
 backup="$ansi_white backup: "
 
 # You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
-PREFIX=/mnt/sda1
+PREFIX=/jffs
 SCRIPT_DIR=$(dirname ${0})
 SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
@@ -332,7 +332,8 @@ Your Choice:"
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
 		
-		/opt/etc/init.d/S56dnsmasq restart
+		killall dnsmasq && \
+			/opt/etc/init.d/S56dnsmasq restart
 		
 		rm -f $CHECK/pdnsd.conf
 		cat > $CHECK/pdnsd.conf <<-end
@@ -446,7 +447,8 @@ uptest= none;
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
 
-		/opt/etc/init.d/S56dnsmasq restart
+		killall dnsmasq && \
+			/opt/etc/init.d/S56dnsmasq restart
 		
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -512,7 +514,8 @@ uptest= none;
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
 
-		/opt/etc/init.d/S56dnsmasq restart
+		killall dnsmasq && \
+			/opt/etc/init.d/S56dnsmasq restart
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -573,7 +576,8 @@ uptest= none;
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
 
-		/opt/etc/init.d/S56dnsmasq restart
+		killall dnsmasq && \
+			/opt/etc/init.d/S56dnsmasq restart
 		
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -639,7 +643,8 @@ uptest= none;
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
 
-		/opt/etc/init.d/S56dnsmasq restart		
+		killall dnsmasq && \
+			/opt/etc/init.d/S56dnsmasq restart		
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -687,6 +692,12 @@ uptest= none;
 	else
 		echo '['$DATE'] Has loaded China route table.' > /var/log/chnroutes.log
 	fi
+
+	if [ "$adbyby_filter" == "1" ]; then
+		if [ ! -f "/opt/var/log/adbyby.lock" ]; then
+			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S30adbyby (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
+		fi	
+	fi	
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
@@ -701,6 +712,7 @@ uptest= none;
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
+#		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
@@ -802,7 +814,8 @@ uptest= none;
 
 	$PREFIX/shadowsocks/shadowsocks -f	
 	$PREFIX/shadowsocks/shadowsocks -r	
-	stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart	
+	killall dnsmasq && \
+		/opt/etc/init.d/S56dnsmasq restart
 
 	echo -e -n "$ansi_white Global... "	
 	sleep 1
@@ -920,16 +933,16 @@ uptest= none;
 			/opt/etc/init.d/S27pcap-dnsproxy restart
 			$PREFIX/shadowsocks/shadowsocks -f
 			sleep 1
-			$PREFIX/shadowsocks/shadowsocks -r
-			stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart	
+			$PREFIX/shadowsocks/shadowsocks -r	
 		else
 			/opt/etc/init.d/S24chinadns restart
 			$PREFIX/shadowsocks/shadowsocks -f
 			sleep 1
 			$PREFIX/shadowsocks/shadowsocks -r
-			stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
 		fi
 	fi
+	killall dnsmasq && \
+		/opt/etc/init.d/S56dnsmasq restart	
 	echo -e -n "$ansi_white Updating chnroutes... "
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"	
@@ -950,7 +963,8 @@ uptest= none;
 	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"
-	stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+	killall dnsmasq && \
+		/opt/etc/init.d/S56dnsmasq restart
 	;;	
 	
 -c | --check)
@@ -1118,7 +1132,8 @@ uptest= none;
 	fi
 
 	$PREFIX/shadowsocks/shadowsocks -S
-	stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+	killall dnsmasq && \
+		/opt/etc/init.d/S56dnsmasq restart
 	;;
 
 -lc | --lan_control)
@@ -1156,7 +1171,8 @@ uptest= none;
 					cp $CHECK/dnsmasq.conf $CHECK/dnsmasq.conf.bak
 					cp /tmp/etc/dnsmasq.conf $CHECK/dnsmasq.conf
 					$PREFIX/shadowsocks/shadowsocks -f
-					stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+					killall dnsmasq && \
+						/opt/etc/init.d/S56dnsmasq restart
 				fi			
 			else
 				: ${warning:?"You do not have any operations."}
@@ -1172,7 +1188,8 @@ uptest= none;
 					$PREFIX/shadowsocks/shadowsocks -f && \
 					$PREFIX/shadowsocks/shadowsocks -S && \
 					$PREFIX/shadowsocks/shadowsocks -r
-					stopservice dnsmasq && /opt/etc/init.d/S56dnsmasq restart
+					killall dnsmasq && \
+						/opt/etc/init.d/S56dnsmasq restart
 				fi
 			else
 				: ${warning:?"You do not have any operations."}
