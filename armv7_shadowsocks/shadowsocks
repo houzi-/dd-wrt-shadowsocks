@@ -712,7 +712,7 @@ uptest= none;
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-#		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
+#		/opt/etc/init.d/S30adbyby start
 		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
@@ -735,12 +735,42 @@ uptest= none;
 -r | --rules)
 	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
 	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
-	/opt/etc/init.d/S99ss-rules start
-	adbyby_put=$PREFIX/shadowsocks/adbyby_ignore.list
-	if [ "$adbyby_filter" == "1" ]; then
-		if [ ! -f $adbyby_put ]; then
-			adbyby_put=$PREFIX/shadowsocks/adbyby_ignore.list
-			cat > $adbyby_put <<-EOF
+	/opt/etc/init.d/S99ss-rules start	
+	echo -e -n "$ansi_white Loading iptables rules... "
+	sleep 1
+	echo -e "            $ansi_green done. $ansi_std"	
+	;;
+
+-ad | --adbyby)
+	ipset_f() {
+		iptables-save -c | grep -v "ADBYBY_" | \
+		iptables-restore -c 2>/dev/null
+		ipset -X adbyby_lan_ac 2>/dev/null
+		ipset -X adbyby_wan_ac 2>/dev/null		
+	}
+
+	ipset_r() {
+		ipset_f
+		ipset -! -R <<-EOF || return 1
+			create adbyby_wan_ac hash:net
+			$(adbyby_iplist | sed -e "s/^/add adbyby_wan_ac /")
+	EOF
+		$IPT -N ADBYBY_AC
+		$IPT -A ADBYBY_AC -m set --match-set adbyby_wan_ac dst -j RETURN
+	}
+
+	fw_rules() {			
+		ipset -N adbyby_lan_ac hash:net && \
+		$IPT -N ADBYBY_FW && \
+		$IPT -A ADBYBY_AC -j ADBYBY_FW && \
+		$IPT -A ADBYBY_FW -p tcp --dport 80 \
+			-j REDIRECT --to-ports 8118 && \
+		$IPT -A PREROUTING -p tcp --dport 80 \
+			-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC	
+	}
+
+	adbyby_iplist() {
+		cat <<-EOF | grep -E "^([0-9]{1,3}\.){3}[0-9]{1,3}"
 			0.0.0.0/8
 			10.0.0.0/8
 			100.64.0.0/10
@@ -757,22 +787,10 @@ uptest= none;
 			224.0.0.0/4
 			240.0.0.0/4
 			255.255.255.255
-			EOF
-		fi
+	EOF
+	}
 
-		sleep 5		
-		$IPT -N ADBYBY_AC
-		$IPT -N ADBYBY_FW
-		sed -e "s/^/-A adbyby_wan_ac &/g" -e "1 i\-N adbyby_wan_ac hash:net hashsize 65536" $adbyby_put | ipset -R -!
-		ipset -N adbyby_lan_ac hash:net hashsize 65536
-		$IPT -A ADBYBY_AC -m set --match-set adbyby_wan_ac dst -j RETURN
-		$IPT -A ADBYBY_AC -j ADBYBY_FW
-		$IPT -A ADBYBY_FW -p tcp --dport 80 -j REDIRECT --to-ports 8118
-		$IPT -A PREROUTING -p tcp --dport 80 -m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC	
-	fi	
-	echo -e -n "$ansi_white Loading iptables rules... "
-	sleep 1
-	echo -e "            $ansi_green done. $ansi_std"	
+	ipset_r && fw_rules
 	;;
 
 -g | --global)
@@ -986,8 +1004,8 @@ uptest= none;
 		else
 			echo '['$DATE'] No problem, the normal operation of dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
 		fi
-	fi	
-	
+	fi
+
 	Pcap_DNSProxy=$(ps | grep "Pcap_DNSProxy" | grep -v "grep")
 	if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
 		if [ -z "$Pcap_DNSProxy" ]; then
@@ -1286,6 +1304,7 @@ uptest= none;
 	echo -e "$ansi_white   [-m/--modules] Loading module $ansi_std"
 	echo -e "$ansi_white   [-S/--START] Running ShadowSocks and ChinaDNS $ansi_std"
 	echo -e "$ansi_white   [-r/--rules] Application Firewall Policy $ansi_std"
+	echo -e "$ansi_white   [-ad/--adbyby] Ad Filter $ansi_std"
 	echo -e "$ansi_white   [-g/--global] Global Proxy $ansi_std"
 	echo -e "$ansi_white   [-f/--flush] Clear firewall policy $ansi_std"
 	echo -e "$ansi_white   [-u/--update] Update chnroutes Routing Host $ansi_std"
