@@ -2,7 +2,7 @@
 
 Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com>
 
-Version: V1.2-stable
+Version: V1.3-stable
 
 # Installation
 
