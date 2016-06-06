@@ -32,6 +32,9 @@ CONTENT="Your tools running over the wall!"
 # Target E-mail address
 TO=""
 
+# ADBYBY ad filter
+adbyby_filter=0
+
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
 NORM="\033[0m"
@@ -60,7 +63,7 @@ update_scr="$ansi_white update_scr: "
 backup="$ansi_white backup: "
 
 # You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
-PREFIX=/jffs
+PREFIX=/mnt/sda1
 SCRIPT_DIR=$(dirname ${0})
 SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
@@ -75,6 +78,9 @@ gfw_block_list="https://raw.githubusercontent.com/koolshare/koolshare.github.io/
 china_routing_list="http://entware.mirrors.ligux.com/apnic/delegated-apnic-latest"
 china_domain_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/accelerated-domains.china.conf"
 china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.china.conf"
+
+# alias of iptables
+IPT="iptables -t nat"
 
 case ${1} in
 
@@ -717,7 +723,44 @@ uptest= none;
 -r | --rules)
 	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
 	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
-	/opt/etc/init.d/S99ss-rules start		
+	/opt/etc/init.d/S99ss-rules start
+	adbyby_put=$PREFIX/shadowsocks/adbyby_ignore.list
+	if [ "$adbyby_filter" == "1" ]; then
+		if [ ! -f $adbyby_put ]; then
+			adbyby_put=$PREFIX/shadowsocks/adbyby_ignore.list
+			cat > $adbyby_put <<-EOF
+			0.0.0.0/8
+			10.0.0.0/8
+			100.64.0.0/10
+			127.0.0.0/8
+			169.254.0.0/16
+			172.16.0.0/12
+			192.0.0.0/24
+			192.0.2.0/24
+			192.88.99.0/24
+			192.168.0.0/16
+			198.18.0.0/15
+			198.51.100.0/24
+			203.0.113.0/24
+			224.0.0.0/4
+			240.0.0.0/4
+			255.255.255.255
+			EOF
+		fi
+
+		sleep 5		
+		$IPT -N ADBYBY_AC
+		$IPT -N ADBYBY_FW
+		sed -e "s/^/-A adbyby_wan_ac &/g" -e "1 i\-N adbyby_wan_ac hash:net hashsize 65536" $adbyby_put | ipset -R -!
+		ipset -N adbyby_lan_ac hash:net hashsize 65536
+		$IPT -A ADBYBY_AC -m set --match-set adbyby_wan_ac dst -j RETURN
+		$IPT -A ADBYBY_AC -j ADBYBY_FW
+		$IPT -A ADBYBY_FW -p tcp --dport 80 -j REDIRECT --to-ports 8118
+		$IPT -A PREROUTING -p tcp --dport 80 -m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC	
+	fi	
+	echo -e -n "$ansi_white Loading iptables rules... "
+	sleep 1
+	echo -e "            $ansi_green done. $ansi_std"	
 	;;
 
 -g | --global)
@@ -767,8 +810,8 @@ uptest= none;
 	;;	
 	
 -f | --flush)
-	echo -e -n "$ansi_white Flush_iptables... "
-	ss-rules -f	
+	ss-rules -f
+	echo -e -n "$ansi_white Flush_iptables... "	
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"	
 	;;
@@ -1212,7 +1255,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.5 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.6 $ansi_std"
 	echo -e "$ansi_green # Version: V1.3-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"

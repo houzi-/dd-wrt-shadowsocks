@@ -12,6 +12,7 @@
 
 TAG="SS_SPEC"          # iptables tag
 IPT="iptables -t nat"  # alias of iptables
+ADBYBY="ADBYBY_"       # iptables ADM tag
 
 usage() {
 	cat <<-EOF
@@ -42,19 +43,20 @@ loger() {
 }
 
 flush_r() {
-	iptables-save -c | \
-	sed -e 's/-A INPUT -m state -j ACCEPT/-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
-	-e 's/-A INPUT -i lo -m state -j ACCEPT/-A INPUT -i lo -m conntrack --ctstate NEW -j ACCEPT/' \
-	-e 's/-A INPUT -i br0 -m state -j ACCEPT/-A INPUT -i br0 -m conntrack --ctstate NEW -j ACCEPT/' \
-	-e 's/-A FORWARD -m state -j ACCEPT/-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
-	-e 's/-A FORWARD -i br0 -m state -j ACCEPT/-A FORWARD -i br0 -m conntrack --ctstate NEW -j ACCEPT/' | \
-	grep -v "$TAG" | grep -v "gfw_black_list" | \
-	iptables-restore -c 2>/dev/null
+	iptables-save -c | grep -v "$TAG" | grep -v "gfw_black_list" | grep -v "$ADBYBY" | \
+		sed -e 's/-A INPUT -m state -j ACCEPT/-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
+		-e 's/-A INPUT -i lo -m state -j ACCEPT/-A INPUT -i lo -m conntrack --ctstate NEW -j ACCEPT/' \
+		-e 's/-A INPUT -i br0 -m state -j ACCEPT/-A INPUT -i br0 -m conntrack --ctstate NEW -j ACCEPT/' \
+		-e 's/-A FORWARD -m state -j ACCEPT/-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
+		-e 's/-A FORWARD -i br0 -m state -j ACCEPT/-A FORWARD -i br0 -m conntrack --ctstate NEW -j ACCEPT/' | \
+		iptables-restore -c 2>/dev/null
 	$IPT -F
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	ipset -X ss_spec_lan_ac 2>/dev/null
 	ipset -X ss_spec_wan_ac 2>/dev/null
+	ipset -X adbyby_lan_ac 2>/dev/null
+	ipset -X adbyby_wan_ac 2>/dev/null
 	ipset -X gfw_black_list 2>/dev/null	
 	our_rule
 	if [ "$GFWLIST" = 1 ]; then
@@ -64,7 +66,7 @@ flush_r() {
 		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
 	fi
-	restore_dnsamsq	
+	restore_dnsamsq
 	return 0
 }
 
