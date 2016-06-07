@@ -166,15 +166,15 @@ case ${1} in
 
 	BIN=/opt/bin
 	SBIN=/opt/sbin
-	echo -e "chinadns \ncrontab \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir \ndnsmasq" > /var/log/find.txt	
+	echo -e "chinadns \ncrontab \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir \ndnsmasq" > /var/log/find.txt
 	cd $BIN
-	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then	
+	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then
 		ls -1 chinadns Pcap_DNSProxy ss-redir pdnsd-ctl diff dnscrypt-proxy crontab > /var/log/find_N.txt
 	else
 		ls -1 chinadns Pcap_DNSProxy ss-redir pdnsd-ctl diff dnscrypt-proxy crontab > /var/log/find_N.txt
 	fi
 	cd /
-	
+
 	find $SBIN/dnsmasq &> /dev/null;echo $? > /var/log/sbin.txt
 	sbin=`sed -n '1p' /var/log/sbin.txt`
 	if [ "$sbin" == "0" ]; then
@@ -368,11 +368,11 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh
 
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"	
@@ -457,12 +457,12 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh	
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh		
 
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -524,12 +524,12 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/dnscrypt-proxy_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh			
 		
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -586,11 +586,11 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh	
 	
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -653,11 +653,11 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh	
 		
 		rm -f $PREFIX/shadowsocks/update.lock
