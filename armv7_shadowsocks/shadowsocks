@@ -857,7 +857,7 @@ uptest= none;
 		rm -f $CHECK/ignore.list
 	fi
 
-	wget -q -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
+	wget -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
 	
 	IGNORE_TEMP_LIST=/var/log/ignore_tmp.txt
 	IGNORE_LIST=$CHECK/ignore.list
@@ -886,7 +886,7 @@ uptest= none;
 		rm -f $CHECK/pcap-dnsproxy/Routing.txt $CHECK/pcap-dnsproxy/WhiteList.txt
 
 		# Update Local Hosts
-		cd /tmp;curl -s --insecure -O $china_domain_list;cd /tmp/root
+		cd /tmp;curl --insecure -O $china_domain_list;cd /tmp/root
 		echo -e '[Local Hosts]' >> /tmp/WhiteList.txt
 		echo -e '## China mainland domains' >> /tmp/WhiteList.txt
 		echo -e '## Get the latest database: https://github.com/xinhugo/Free-List/blob/master/WhiteList.txt' >> /tmp/WhiteList.txt
@@ -898,7 +898,7 @@ uptest= none;
 		sed -i 's|b\(cn\)$|\.\1|' /tmp/WhiteList_tmp.txt
 		cat /tmp/WhiteList_tmp.txt >> /tmp/WhiteList.txt
 
-		cd /tmp;curl -s --insecure -O $china_google_list;cd /tmp/root
+		cd /tmp;curl --insecure -O $china_google_list;cd /tmp/root
 		sed 's|/114.114.114.114$||' /tmp/google.china.conf > /tmp/WhiteList_tmp.txt
 		sed -i 's|\(\.\)|\\\1|g' /tmp/WhiteList_tmp.txt
 		sed -i 's|server=/|.*\\\b|' /tmp/WhiteList_tmp.txt
@@ -911,7 +911,7 @@ uptest= none;
 		rm -f /tmp/WhiteList_tmp.txt /tmp/WhiteList.txt /tmp/accelerated-domains.china.conf /tmp/google.china.conf
 	
 		# Update Local Routing
-		curl -s --insecure $china_routing_list | grep ipv4 | grep CN | awk -F\| '{printf("%s/%d\n", $4, 32-log($5)/log(2))}' > /tmp/Routing_IPv4.txt
+		curl --insecure $china_routing_list | grep ipv4 | grep CN | awk -F\| '{printf("%s/%d\n", $4, 32-log($5)/log(2))}' > /tmp/Routing_IPv4.txt
 		echo -e '[Local Routing]' >> /tmp/Routing_IPv4_tmp.txt
 		echo -e '## China mainland routing blocks' >> /tmp/Routing_IPv4_tmp.txt
 		echo -e "## Last update: $DATE\n\n" >> /tmp/Routing_IPv4_tmp.txt
@@ -919,7 +919,7 @@ uptest= none;
 		echo -e '## Get the latest database from APNIC -> https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' >> /tmp/Routing_IPv4_tmp.txt
 		cat /tmp/Routing_IPv4.txt >> /tmp/Routing_IPv4_tmp.txt
 
-		curl -s --insecure $china_routing_list | grep ipv6 | grep CN | awk -F\| '{printf("%s/%d\n", $4, $5)}' > /tmp/Routing_IPv6.txt
+		curl --insecure $china_routing_list | grep ipv6 | grep CN | awk -F\| '{printf("%s/%d\n", $4, $5)}' > /tmp/Routing_IPv6.txt
 		echo -e '## IPv6' >> /tmp/Routing_IPv6_tmp.txt
 		echo -e '## Get the latest database from APNIC -> https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' >> /tmp/Routing_IPv6_tmp.txt
 		cat /tmp/Routing_IPv6.txt >> /tmp/Routing_IPv6_tmp.txt
@@ -934,7 +934,7 @@ uptest= none;
 		cp /tmp/Routing.txt $CHECK/pcap-dnsproxy
 		rm -f /tmp/Routing_IPv4.txt /tmp/Routing_IPv4_tmp.txt /tmp/Routing_IPv6.txt /tmp/Routing_IPv6_tmp.txt /tmp/Routing.txt
 	else
-		wget -q -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
+		wget -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
 		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /tmp/root
 		cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
 		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
@@ -975,7 +975,7 @@ uptest= none;
 		
 	DNS=127.0.0.1#1054
 		
-	cd $PREFIX/shadowsocks/dnsmasq.d;curl -s --insecure -O $gfw_block_list;cd /tmp/root
+	cd $PREFIX/shadowsocks/dnsmasq.d;curl --insecure -O $gfw_block_list;cd /tmp/root
 		
 	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
 	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
