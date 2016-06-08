@@ -685,7 +685,7 @@ uptest= none;
 	;;
 	
 -S | --START)
-	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
+	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
 	
 	if [ -f "$PREFIX/shadowsocks/chnroutes.lock" ]; then
 		$PREFIX/shadowsocks/shadowsocks -u
@@ -734,7 +734,7 @@ uptest= none;
 	
 -r | --rules)
 	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
-	sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
+	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
 	/opt/etc/init.d/S99ss-rules start	
 	echo -e -n "$ansi_white Loading iptables rules... "
 	sleep 1
@@ -1290,7 +1290,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.6 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.8 $ansi_std"
 	echo -e "$ansi_green # Version: V1.3-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
