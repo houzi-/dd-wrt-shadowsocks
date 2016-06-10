@@ -32,7 +32,6 @@ usage() {
 		    -u                      enable udprelay mode, TPROXY is required
 		    -G                      enable GFWLIST
 		    -f                      flush the rules
-		    -C                      guardian rules
 		    -h                      show this help message and exit
 EOF
 	exit $1
@@ -158,7 +157,7 @@ gen_iplist() {
 EOF
 }
 
-while getopts ":s:l:i:e:a:b:w:ouGfhC" arg; do
+while getopts ":s:l:i:e:a:b:w:ouGfh" arg; do
 	case "$arg" in
 		s)
 			server=$OPTARG
@@ -192,10 +191,6 @@ while getopts ":s:l:i:e:a:b:w:ouGfhC" arg; do
 			;;			
 		f)
 			flush_r
-			exit 0
-			;;
-		C)
-			check_r
 			exit 0
 			;;
 		h)
