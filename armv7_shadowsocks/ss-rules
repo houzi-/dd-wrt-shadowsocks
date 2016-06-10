@@ -10,9 +10,9 @@
 #debug
 #set -x
 
-TAG="SS_SPEC"          # iptables tag
-IPT="iptables -t nat"  # alias of iptables
-ADBYBY="ADBYBY_"       # iptables ADM tag
+TAG="SS_SPEC"                     # iptables tag
+IPT="/opt/sbin/iptables -t nat"   # alias of iptables
+ADBYBY="ADBYBY_"                  # iptables ADM tag
 
 usage() {
 	cat <<-EOF
@@ -32,6 +32,7 @@ usage() {
 		    -u                      enable udprelay mode, TPROXY is required
 		    -G                      enable GFWLIST
 		    -f                      flush the rules
+		    -C                      guardian rules
 		    -h                      show this help message and exit
 EOF
 	exit $1
@@ -43,22 +44,15 @@ loger() {
 }
 
 flush_r() {
-	iptables-save -c | grep -v "$TAG" | grep -v "gfw_black_list" | grep -v "$ADBYBY" | \
-		sed -e 's/-A INPUT -m state -j ACCEPT/-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
-		-e 's/-A INPUT -i lo -m state -j ACCEPT/-A INPUT -i lo -m conntrack --ctstate NEW -j ACCEPT/' \
-		-e 's/-A INPUT -i br0 -m state -j ACCEPT/-A INPUT -i br0 -m conntrack --ctstate NEW -j ACCEPT/' \
-		-e 's/-A FORWARD -m state -j ACCEPT/-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT/' \
-		-e 's/-A FORWARD -i br0 -m state -j ACCEPT/-A FORWARD -i br0 -m conntrack --ctstate NEW -j ACCEPT/' | \
-		iptables-restore -c 2>/dev/null
-	$IPT -F
+	/opt/sbin/iptables-save -c | grep -v "$TAG" | grep -v "gfw_black_list" | grep -v "$ADBYBY" | \
+		/opt/sbin/iptables-restore -c 2>/dev/null
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	ipset -X ss_spec_lan_ac 2>/dev/null
 	ipset -X ss_spec_wan_ac 2>/dev/null
 	ipset -X adbyby_lan_ac 2>/dev/null
 	ipset -X adbyby_wan_ac 2>/dev/null
-	ipset -X gfw_black_list 2>/dev/null	
-	our_rule
+	ipset -X gfw_black_list 2>/dev/null
 	if [ "$GFWLIST" = 1 ]; then
 		ipset -N gfw_black_list hash:ip hashsize 65536
 		$IPT -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
@@ -91,17 +85,6 @@ fw_rule() {
 		exit 1
 	}
 	return $?
-}
-
-our_rule() {
-	$IPT -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` -p icmp \
-		-j DNAT --to-destination `nvram get lan_ipaddr` && \
-	$IPT -t nat -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` \
-		-j TRIGGER --trigger-type dnat  --trigger-proto all && \
-	$IPT -t nat -A POSTROUTING -s `nvram get lan_ipaddr | sed -e 's;1$;0/24;'` -o ppp0 \
-		-j SNAT --to-source `nvram get wan_ipaddr` && \
-	$IPT -t nat -A POSTROUTING -m mark --mark 0x80000000/0x80000000 \
-		-j MASQUERADE
 }
 
 restore_dnsamsq() {
@@ -142,7 +125,7 @@ tp_rule() {
 	[ -n "$TPROXY" ] || return 0
 	ip rule add fwmark 0x01/0x01 table 100
 	ip route add local 0.0.0.0/0 dev lo table 100
-	local ipt="iptables -t mangle"
+	local ipt="/opt/sbin/iptables -t mangle"
 	$ipt -N SS_SPEC_TPROXY
 	$ipt -A SS_SPEC_TPROXY -p udp -m set ! --match-set ss_spec_wan_ac dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
@@ -175,7 +158,7 @@ gen_iplist() {
 EOF
 }
 
-while getopts ":s:l:i:e:a:b:w:ouGfh" arg; do
+while getopts ":s:l:i:e:a:b:w:ouGfhC" arg; do
 	case "$arg" in
 		s)
 			server=$OPTARG
@@ -209,6 +192,10 @@ while getopts ":s:l:i:e:a:b:w:ouGfh" arg; do
 			;;			
 		f)
 			flush_r
+			exit 0
+			;;
+		C)
+			check_r
 			exit 0
 			;;
 		h)
