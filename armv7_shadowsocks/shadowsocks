@@ -33,7 +33,7 @@ CONTENT="Your tools running over the wall!"
 TO=""
 
 # ADBYBY ad filter
-adbyby_filter=1
+adbyby_filter=0
 
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
