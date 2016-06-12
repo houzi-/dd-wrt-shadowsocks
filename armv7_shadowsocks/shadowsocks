@@ -33,7 +33,7 @@ CONTENT="Your tools running over the wall!"
 TO=""
 
 # ADBYBY ad filter
-adbyby_filter=0
+adbyby_filter=1
 
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
@@ -372,7 +372,6 @@ uptest= none;
 		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh
 
-		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"	
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -465,7 +464,6 @@ uptest= none;
 
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -533,7 +531,6 @@ uptest= none;
 		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -595,7 +592,6 @@ uptest= none;
 	
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -663,7 +659,6 @@ uptest= none;
 		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
-		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -703,17 +698,13 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq
-#		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
-#		mount -o bind /opt/sbin/iptables-restore /usr/sbin/iptables-restore
-#		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
-#		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq			
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
-		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
+#		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
 #		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
 		exit 0	
@@ -750,6 +741,20 @@ uptest= none;
 		ipset -X adbyby_lan_ac 2>/dev/null
 		ipset -X adbyby_wan_ac 2>/dev/null		
 	}
+	
+	case ${2} in
+		stop)
+			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} adbyby?(y/N) $ansi_std"
+			read choice	
+			if [ "${choice}" == "y" ]; then
+				/opt/etc/init.d/S30adbyby ${2}
+				ipset_f
+				exit 0
+			else
+				: ${warning:?"You do not have any operations."}
+			fi
+		;;
+		esac
 
 	ipset_r() {
 		ipset_f
@@ -796,50 +801,38 @@ uptest= none;
 	;;
 
 -g | --global)
-	yes_or_no() {
-		read -p "$1 ([y]es or [n]o): "
-		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
-			y|yes) echo "yes" ;;
-			*)     echo "no" ;;
+	case ${2} in
+		start)
+			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} global?(y/N) $ansi_std"
+			read choice
+			if [ "${choice}" == "y" ]; then
+				touch a $CHECK/global.list
+				sed -i 's/\$ignore_list/$global_list/' /opt/bin/ss-watchdog
+				echo -e -n "$ansi_white ${2} Global... "
+				sleep 1
+				echo -e "            $ansi_green done. $ansi_std"				
+			else
+				: ${warning:?"You do not have any operations."}
+			fi
+		;;
+
+		stop)
+			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} global?(y/N) $ansi_std"
+			read choice
+			if [ "${choice}" == "y" ]; then
+				touch a $CHECK/global.list	
+				sed -i 's/\$global_list/$ignore_list/' /opt/bin/ss-watchdog
+				echo -e -n "$ansi_white ${2} Global... "
+				sleep 1
+				echo -e "            $ansi_green done. $ansi_std"		
+			else
+				: ${warning:?"You do not have any operations."}
+			fi
+		;;			
 		esac
-	}
 
-	echo -e "$ansi_white Do you want to use global proxy?(y/N)$ansi_std"
-	if [ "yes" == $(yes_or_no) ]; then
-		if [ ! -f "$CHECK/global.list" ]; then
-			GLOBAL_LIST=$CHECK/global.list
-			cat > $GLOBAL_LIST <<-EOF
-			0.0.0.0/8
-			10.0.0.0/8
-			100.64.0.0/10
-			127.0.0.0/8
-			169.254.0.0/16
-			172.16.0.0/12
-			192.0.0.0/24
-			192.0.2.0/24
-			192.88.99.0/24
-			192.168.0.0/16
-			198.18.0.0/15
-			198.51.100.0/24
-			203.0.113.0/24
-			224.0.0.0/4
-			240.0.0.0/4
-			255.255.255.255
-			EOF
-		fi		
-		sed -i 's/\$ignore_list/$global_list/' /opt/bin/ss-watchdog
-	else
-		sed -i 's/\$global_list/$ignore_list/' /opt/bin/ss-watchdog
-	fi
-
-	$PREFIX/shadowsocks/shadowsocks -f	
-	$PREFIX/shadowsocks/shadowsocks -r	
-	killall dnsmasq && \
-		/opt/etc/init.d/S56dnsmasq restart
-
-	echo -e -n "$ansi_white Global... "	
-	sleep 1
-	echo -e "            $ansi_green done. $ansi_std"	
+	$PREFIX/shadowsocks/shadowsocks -f
+	$PREFIX/shadowsocks/shadowsocks -r
 	;;	
 	
 -f | --flush)
@@ -859,7 +852,7 @@ uptest= none;
 		rm -f $CHECK/ignore.list
 	fi
 
-	wget -q -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
+	wget -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
 	
 	IGNORE_TEMP_LIST=/var/log/ignore_tmp.txt
 	IGNORE_LIST=$CHECK/ignore.list
@@ -888,7 +881,7 @@ uptest= none;
 		rm -f $CHECK/pcap-dnsproxy/Routing.txt $CHECK/pcap-dnsproxy/WhiteList.txt
 
 		# Update Local Hosts
-		cd /tmp;curl -s --insecure -O $china_domain_list;cd /tmp/root
+		cd /tmp;curl --insecure -O $china_domain_list;cd /tmp/root
 		echo -e '[Local Hosts]' >> /tmp/WhiteList.txt
 		echo -e '## China mainland domains' >> /tmp/WhiteList.txt
 		echo -e '## Get the latest database: https://github.com/xinhugo/Free-List/blob/master/WhiteList.txt' >> /tmp/WhiteList.txt
@@ -900,7 +893,7 @@ uptest= none;
 		sed -i 's|b\(cn\)$|\.\1|' /tmp/WhiteList_tmp.txt
 		cat /tmp/WhiteList_tmp.txt >> /tmp/WhiteList.txt
 
-		cd /tmp;curl -s --insecure -O $china_google_list;cd /tmp/root
+		cd /tmp;curl --insecure -O $china_google_list;cd /tmp/root
 		sed 's|/114.114.114.114$||' /tmp/google.china.conf > /tmp/WhiteList_tmp.txt
 		sed -i 's|\(\.\)|\\\1|g' /tmp/WhiteList_tmp.txt
 		sed -i 's|server=/|.*\\\b|' /tmp/WhiteList_tmp.txt
@@ -913,7 +906,7 @@ uptest= none;
 		rm -f /tmp/WhiteList_tmp.txt /tmp/WhiteList.txt /tmp/accelerated-domains.china.conf /tmp/google.china.conf
 	
 		# Update Local Routing
-		curl -s --insecure $china_routing_list | grep ipv4 | grep CN | awk -F\| '{printf("%s/%d\n", $4, 32-log($5)/log(2))}' > /tmp/Routing_IPv4.txt
+		curl --insecure $china_routing_list | grep ipv4 | grep CN | awk -F\| '{printf("%s/%d\n", $4, 32-log($5)/log(2))}' > /tmp/Routing_IPv4.txt
 		echo -e '[Local Routing]' >> /tmp/Routing_IPv4_tmp.txt
 		echo -e '## China mainland routing blocks' >> /tmp/Routing_IPv4_tmp.txt
 		echo -e "## Last update: $DATE\n\n" >> /tmp/Routing_IPv4_tmp.txt
@@ -921,7 +914,7 @@ uptest= none;
 		echo -e '## Get the latest database from APNIC -> https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' >> /tmp/Routing_IPv4_tmp.txt
 		cat /tmp/Routing_IPv4.txt >> /tmp/Routing_IPv4_tmp.txt
 
-		curl -s --insecure $china_routing_list | grep ipv6 | grep CN | awk -F\| '{printf("%s/%d\n", $4, $5)}' > /tmp/Routing_IPv6.txt
+		curl --insecure $china_routing_list | grep ipv6 | grep CN | awk -F\| '{printf("%s/%d\n", $4, $5)}' > /tmp/Routing_IPv6.txt
 		echo -e '## IPv6' >> /tmp/Routing_IPv6_tmp.txt
 		echo -e '## Get the latest database from APNIC -> https://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' >> /tmp/Routing_IPv6_tmp.txt
 		cat /tmp/Routing_IPv6.txt >> /tmp/Routing_IPv6_tmp.txt
@@ -936,7 +929,7 @@ uptest= none;
 		cp /tmp/Routing.txt $CHECK/pcap-dnsproxy
 		rm -f /tmp/Routing_IPv4.txt /tmp/Routing_IPv4_tmp.txt /tmp/Routing_IPv6.txt /tmp/Routing_IPv6_tmp.txt /tmp/Routing.txt
 	else
-		wget -q -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
+		wget -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
 		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /tmp/root
 		cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
 		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
@@ -977,7 +970,7 @@ uptest= none;
 		
 	DNS=127.0.0.1#1054
 		
-	cd $PREFIX/shadowsocks/dnsmasq.d;curl -s --insecure -O $gfw_block_list;cd /tmp/root
+	cd $PREFIX/shadowsocks/dnsmasq.d;curl --insecure -O $gfw_block_list;cd /tmp/root
 		
 	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
 	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
@@ -1292,7 +1285,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.10 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.12 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
