@@ -10,9 +10,11 @@
 #debug
 #set -x
 
-TAG="SS_SPEC"                     # iptables tag
-IPT="/opt/sbin/iptables -t nat"   # alias of iptables
-ADBYBY="ADBYBY_"                  # iptables ADM tag
+TAG="SS_SPEC"
+IPT="/opt/sbin/iptables -t nat"
+ADBYBY="ADBYBY_"
+JSON="/opt/etc/shadowsocks.json"
+PORT=`sed -n 's/.*l_port": *\(.*\)/\1/p' $JSON | sed 's/,//g'`
 
 usage() {
 	cat <<-EOF
@@ -52,15 +54,18 @@ flush_r() {
 	ipset -X adbyby_lan_ac 2>/dev/null
 	ipset -X adbyby_wan_ac 2>/dev/null
 	ipset -X gfw_black_list 2>/dev/null
+	restore_dnsamsq
+	return 0
+}
+
+gfw_r() {
 	if [ "$GFWLIST" = 1 ]; then
 		ipset -N gfw_black_list hash:ip hashsize 65536
 		$IPT -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
-			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
+			-j REDIRECT --to-port $PORT
 		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
-			-j REDIRECT --to-port `sed -n 's/.*l_port":\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
+			-j REDIRECT --to-port $PORT
 	fi
-	restore_dnsamsq
-	return 0
 }
 
 ipset_r() {
@@ -157,7 +162,7 @@ gen_iplist() {
 EOF
 }
 
-while getopts ":s:l:i:e:a:b:w:ouGfh" arg; do
+while getopts ":s:l:i:e:a:b:w:ouGfhC" arg; do
 	case "$arg" in
 		s)
 			server=$OPTARG
@@ -220,7 +225,7 @@ if [ -n "$IGNORE_LIST" ]; then
 	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
 	exit $?
 else
-	flush_r
+	flush_r && gfw_r
 	[ "$?" = 0 ] && loger 6 "Load gfwlist successful" || loger 3 "Start failed!"
 	exit $?
 fi
