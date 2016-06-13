@@ -162,7 +162,7 @@ gen_iplist() {
 EOF
 }
 
-while getopts ":s:l:i:e:a:b:w:ouGfhC" arg; do
+while getopts ":s:l:i:e:a:b:w:ouGfh" arg; do
 	case "$arg" in
 		s)
 			server=$OPTARG
