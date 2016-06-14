@@ -33,7 +33,7 @@ CONTENT="Your tools running over the wall!"
 TO=""
 
 # ADBYBY ad filter
-adbyby_filter=1
+adbyby_filter=0
 
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
@@ -63,7 +63,7 @@ update_scr="$ansi_white update_scr: "
 backup="$ansi_white backup: "
 
 # You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
-PREFIX=/mnt/sda1
+PREFIX=/jffs
 SCRIPT_DIR=$(dirname ${0})
 SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
@@ -707,10 +707,10 @@ uptest= none;
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
-		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
+#		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
-		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
+#		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
+#		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
@@ -1012,7 +1012,7 @@ uptest= none;
 	if [ -f "/var/log/dnscrypt-proxy.lock" ]; then
 		if [ -z "$dnscrypt" ]; then
 			echo '['$DATE'] dnscrypt-proxy abnormal operation, restarting dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
-			/opt/etc/init.d/S29dnscrypt-proxy start
+#			/opt/etc/init.d/S29dnscrypt-proxy start
 		else
 			echo '['$DATE'] No problem, the normal operation of dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
 		fi
@@ -1046,7 +1046,7 @@ uptest= none;
 		if [ -f "/var/log/chinadns.lock" ]; then
 			if [ -z "$CHINADNS" ]; then
 				echo '['$DATE'] ChinaDNS is restarting.' >> /var/log/chinadns_watchdog.log 2>&1
-				/opt/etc/init.d/S24chinadns start
+#				/opt/etc/init.d/S24chinadns start
 			else
 				echo '['$DATE'] ChinaDNS no problem.' >> /var/log/chinadns_watchdog.log 2>&1
 			fi
