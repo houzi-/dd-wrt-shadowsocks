@@ -699,11 +699,7 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq
-#		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
-#		mount -o bind /opt/sbin/iptables-restore /usr/sbin/iptables-restore
-#		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
-#		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq			
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
