@@ -33,7 +33,7 @@ CONTENT="Your tools running over the wall!"
 TO=""
 
 # ADBYBY ad filter
-adbyby_filter=0
+adbyby_filter=1
 
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
@@ -63,7 +63,7 @@ update_scr="$ansi_white update_scr: "
 backup="$ansi_white backup: "
 
 # You can mount the partition path editing (EP:"/jffs" or "/tmp/mnt/sda1" )
-PREFIX=/jffs
+PREFIX=/mnt/sda1
 SCRIPT_DIR=$(dirname ${0})
 SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
@@ -81,6 +81,7 @@ china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.ch
 
 # alias of iptables
 IPT="/opt/sbin/iptables -t nat"
+IPT_D="/usr/sbin/iptables -t nat"
 
 case ${1} in
 
@@ -698,14 +699,18 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq			
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq
+#		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
+#		mount -o bind /opt/sbin/iptables-restore /usr/sbin/iptables-restore
+#		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
+#		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
-#		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
+		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
-#		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-#		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
+		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
+		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
@@ -736,28 +741,18 @@ uptest= none;
 
 -ad | --adbyby)
 	ipset_f() {
-		/opt/sbin/iptables-save -c | grep -v "ADBYBY_" | \
-		/opt/sbin/iptables-restore -c 2>/dev/null
+		$IPT -D PREROUTING -p tcp --dport 80 \
+		-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC 2>/dev/null
+		$IPT -F ADBYBY_AC 2>/dev/null
+		$IPT -F ADBYBY_FW 2>/dev/null		
+		$IPT -X ADBYBY_AC 2>/dev/null
+		$IPT -X ADBYBY_FW 2>/dev/null		
 		ipset -X adbyby_lan_ac 2>/dev/null
-		ipset -X adbyby_wan_ac 2>/dev/null		
+		ipset -X adbyby_wan_ac 2>/dev/null
 	}
-	
-	case ${2} in
-		stop)
-			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} adbyby?(y/N) $ansi_std"
-			read choice	
-			if [ "${choice}" == "y" ]; then
-				/opt/etc/init.d/S30adbyby ${2}
-				ipset_f
-				exit 0
-			else
-				: ${warning:?"You do not have any operations."}
-			fi
-		;;
-		esac
 
 	ipset_r() {
-		ipset_f
+		ipset_f		
 		ipset -! -R <<-EOF || return 1
 			create adbyby_wan_ac hash:net
 			$(adbyby_iplist | sed -e "s/^/add adbyby_wan_ac /")
@@ -797,7 +792,29 @@ uptest= none;
 	EOF
 	}
 
-	ipset_r && fw_rules
+	case ${2} in
+		stop)
+			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} adbyby?(y/N) $ansi_std"
+			read choice	
+			if [ "${choice}" == "y" ]; then
+				/opt/etc/init.d/S30adbyby ${2}
+				ipset_f
+				exit 0
+			else
+				: ${warning:?"You do not have any operations."}
+			fi
+		;;
+
+		start)
+			[ ! "`ps | grep "adbyby" | grep -v "grep" | wc -l`" -eq 2 ] && {
+			/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock	
+		}
+			ipset_r && fw_rules
+			echo -e -n "$ansi_white ${2} adbyby... "
+			sleep 1
+			echo -e "            $ansi_green done. $ansi_std"			
+		;;
+		esac
 	;;
 
 -g | --global)
@@ -995,7 +1012,7 @@ uptest= none;
 	if [ -f "/var/log/dnscrypt-proxy.lock" ]; then
 		if [ -z "$dnscrypt" ]; then
 			echo '['$DATE'] dnscrypt-proxy abnormal operation, restarting dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
-#			/opt/etc/init.d/S29dnscrypt-proxy start
+			/opt/etc/init.d/S29dnscrypt-proxy start
 		else
 			echo '['$DATE'] No problem, the normal operation of dnscrypt-proxy.' >> /var/log/dnscrypt-proxy_watchdog.log 2>&1
 		fi
@@ -1029,7 +1046,7 @@ uptest= none;
 		if [ -f "/var/log/chinadns.lock" ]; then
 			if [ -z "$CHINADNS" ]; then
 				echo '['$DATE'] ChinaDNS is restarting.' >> /var/log/chinadns_watchdog.log 2>&1
-#				/opt/etc/init.d/S24chinadns start
+				/opt/etc/init.d/S24chinadns start
 			else
 				echo '['$DATE'] ChinaDNS no problem.' >> /var/log/chinadns_watchdog.log 2>&1
 			fi
@@ -1285,7 +1302,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.12 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.14 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"

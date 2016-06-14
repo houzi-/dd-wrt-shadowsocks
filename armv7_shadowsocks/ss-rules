@@ -8,13 +8,11 @@
 #
 
 #debug
-#set -x
+set -x
 
-TAG="SS_SPEC"
 IPT="/opt/sbin/iptables -t nat"
-ADBYBY="ADBYBY_"
-JSON="/opt/etc/shadowsocks.json"
-PORT=`sed -n 's/.*l_port": *\(.*\)/\1/p' $JSON | sed 's/,//g'`
+IPT_M="/opt/sbin/iptables -t mangle"
+IPT_D="/usr/sbin/iptables -t nat"
 
 usage() {
 	cat <<-EOF
@@ -45,27 +43,64 @@ loger() {
 }
 
 flush_r() {
-	/opt/sbin/iptables-save -c | grep -v "$TAG" | grep -v "gfw_black_list" | grep -v "$ADBYBY" | \
-		/opt/sbin/iptables-restore -c 2>/dev/null
+	$IPT -F 2>/dev/null
+	$IPT_M -F 2>/dev/null
+	$IPT -X SS_SPEC_WAN_AC 2>/dev/null
+	$IPT -X SS_SPEC_WAN_FW 2>/dev/null
+	$IPT_M -X SS_SPEC_TPROXY 2>/dev/null	
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	ipset -X ss_spec_lan_ac 2>/dev/null
 	ipset -X ss_spec_wan_ac 2>/dev/null
+	[ -f "/var/log/gfwlist.lock" ] && {
+	local JSON="/opt/etc/shadowsocks.json"
+	local PORT=`sed -n 's/.*l_port":\(.*\)/\1/p' $JSON | sed 's/,//g'`
+	$IPT -D PREROUTING -p tcp -m set --match-set gfw_black_list dst \
+		-j REDIRECT --to-port $PORT 2>/dev/null
+	$IPT -D OUTPUT -p tcp -m set --match-set gfw_black_list dst \
+		-j REDIRECT --to-port $PORT 2>/dev/null
+	ipset -X gfw_black_list 2>/dev/null
+}
+	[ -f "/var/log/adbyby.lock" ] && {
+	$IPT -X ADBYBY_AC 2>/dev/null
+	$IPT -X ADBYBY_FW 2>/dev/null
 	ipset -X adbyby_lan_ac 2>/dev/null
 	ipset -X adbyby_wan_ac 2>/dev/null
-	ipset -X gfw_black_list 2>/dev/null
+	}
 	restore_dnsamsq
+	our_rule
 	return 0
 }
 
 gfw_r() {
 	if [ "$GFWLIST" = 1 ]; then
 		ipset -N gfw_black_list hash:ip hashsize 65536
+		local JSON="/opt/etc/shadowsocks.json"
+		local PORT=`sed -n 's/.*l_port":\(.*\)/\1/p' $JSON | sed 's/,//g'`
 		$IPT -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port $PORT
 		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port $PORT
+		touch a /var/log/gfwlist.lock
 	fi
+}
+
+our_rule() {
+	###################### nat #########################
+	$IPT_D -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` -p icmp \
+		-j DNAT --to-destination `nvram get lan_ipaddr` && \
+	$IPT_D -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` \
+		-j TRIGGER --trigger-type dnat  --trigger-proto all && \
+	$IPT_D -A POSTROUTING -s `nvram get lan_ipaddr | sed -e 's;1$;0/24;'` -o ppp0 \
+		-j SNAT --to-source `nvram get wan_ipaddr` && \
+	$IPT_D -A POSTROUTING -m mark --mark 0x80000000/0x80000000 \
+		-j MASQUERADE && \
+	###################### mangle ######################
+	$IPT_M -A PREROUTING -d `nvram get wan_ipaddr | sed -e 's;$;/32;'` ! -i ppp0 \
+		-j MARK --set-xmark 0x80000000/0x80000000 && \
+	$IPT_M -A PREROUTING -j CONNMARK --set-xmark 0x0/0xffffffff && \
+	$IPT_M -A FORWARD -p tcp -m tcp --tcp-flags SYN,RST SYN \
+		-j TCPMSS --clamp-mss-to-pmt
 }
 
 ipset_r() {
@@ -129,7 +164,7 @@ tp_rule() {
 	[ -n "$TPROXY" ] || return 0
 	ip rule add fwmark 0x01/0x01 table 100
 	ip route add local 0.0.0.0/0 dev lo table 100
-	local ipt="/opt/sbin/iptables -t mangle"
+	local ipt="/mmc/iptables-static/sbin/iptables -t mangle"
 	$ipt -N SS_SPEC_TPROXY
 	$ipt -A SS_SPEC_TPROXY -p udp -m set ! --match-set ss_spec_wan_ac dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
@@ -220,7 +255,7 @@ fi
 if [ -n "$IGNORE_LIST" ]; then
 	flush_r && fw_rule && ipset_r && ac_rule && tp_rule
 	if [ -f "/var/log/adbyby.lock" ]; then
-		sleep 2 && /opt/bin/shadowsocks -ad
+		sleep 2 && /opt/bin/shadowsocks -ad start
 	fi
 	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
 	exit $?
