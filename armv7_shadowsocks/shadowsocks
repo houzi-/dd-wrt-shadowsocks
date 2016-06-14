@@ -744,9 +744,9 @@ uptest= none;
 		cat <<-EOF
 Usage: adbyby [options]
 Valid options are:
-    -l <lan_ip_list>         port number of shadowsocks local server
-    -c <clear_lan_ip>        ip address of shadowsocks remote UDP server
-    -f                       flush the rules
+    -l <lan_ip_list>         network control device filters
+    -c <clear_lan_ip>        clean up ip
+    -f                       flush rules of adbyby
 EOF
 	exit $1
 }
