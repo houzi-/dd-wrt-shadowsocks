@@ -8,11 +8,11 @@
 #
 
 #debug
-set -x
+#set -x
 
-IPT="/opt/sbin/iptables -t nat"        # iptables chains of nat(Third-party)
-IPT_M="/opt/sbin/iptables -t mangle"   # iptables chain of magle(Third-party)
-IPT_D="/usr/sbin/iptables -t nat"      # iptables chains of nat(DD-WRT)
+IPT="/opt/sbin/iptables -t nat"
+IPT_M="/opt/sbin/iptables -t mangle"
+IPT_D="/usr/sbin/iptables -t nat"
 
 usage() {
 	cat <<-EOF
@@ -254,9 +254,6 @@ fi
 
 if [ -n "$IGNORE_LIST" ]; then
 	flush_r && fw_rule && ipset_r && ac_rule && tp_rule
-	if [ -f "/var/log/adbyby.lock" ]; then
-		sleep 2 && /opt/bin/shadowsocks -ad start
-	fi
 	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
 	exit $?
 else

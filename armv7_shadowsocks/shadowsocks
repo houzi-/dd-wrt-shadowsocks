@@ -699,7 +699,11 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq			
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq
+#		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
+#		mount -o bind /opt/sbin/iptables-restore /usr/sbin/iptables-restore
+#		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
+#		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
@@ -736,6 +740,17 @@ uptest= none;
 	;;
 
 -ad | --adbyby)
+	usage() {
+		cat <<-EOF
+Usage: adbyby [options]
+Valid options are:
+    -l <lan_ip_list>         port number of shadowsocks local server
+    -c <clear_lan_ip>        ip address of shadowsocks remote UDP server
+    -f                       flush the rules
+EOF
+	exit $1
+}
+
 	ipset_f() {
 		$IPT -D PREROUTING -p tcp --dport 80 \
 		-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC 2>/dev/null
@@ -745,26 +760,31 @@ uptest= none;
 		$IPT -X ADBYBY_FW 2>/dev/null		
 		ipset -X adbyby_lan_ac 2>/dev/null
 		ipset -X adbyby_wan_ac 2>/dev/null
+		return 0
 	}
 
-	ipset_r() {
-		ipset_f		
+	ipset_r() {		
 		ipset -! -R <<-EOF || return 1
 			create adbyby_wan_ac hash:net
 			$(adbyby_iplist | sed -e "s/^/add adbyby_wan_ac /")
 	EOF
 		$IPT -N ADBYBY_AC
 		$IPT -A ADBYBY_AC -m set --match-set adbyby_wan_ac dst -j RETURN
+		return $?
 	}
 
 	fw_rules() {			
-		ipset -N adbyby_lan_ac hash:net && \
+		ipset -! -R <<-EOF || return 1
+			create adbyby_lan_ac hash:net
+			$(sed -e "s/^/add adbyby_lan_ac /" ${LAN_CONTROL:=/dev/null} 2>/dev/null)
+	EOF
 		$IPT -N ADBYBY_FW && \
 		$IPT -A ADBYBY_AC -j ADBYBY_FW && \
 		$IPT -A ADBYBY_FW -p tcp --dport 80 \
 			-j REDIRECT --to-ports 8118 && \
 		$IPT -A PREROUTING -p tcp --dport 80 \
-			-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC	
+			-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC
+		return $?	
 	}
 
 	adbyby_iplist() {
@@ -788,29 +808,36 @@ uptest= none;
 	EOF
 	}
 
-	case ${2} in
-		stop)
-			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} adbyby?(y/N) $ansi_std"
-			read choice	
-			if [ "${choice}" == "y" ]; then
-				/opt/etc/init.d/S30adbyby ${2}
-				ipset_f
-				exit 0
-			else
-				: ${warning:?"You do not have any operations."}
-			fi
-		;;
-
-		start)
-			[ ! "`ps | grep "adbyby" | grep -v "grep" | wc -l`" -eq 2 ] && {
-			/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock	
+	start_adbyby() {
+		[ ! "`ps | grep "adbyby" | grep -v "grep" | wc -l`" -eq 2 ] && {
+			/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		}
-			ipset_r && fw_rules
-			echo -e -n "$ansi_white ${2} adbyby... "
-			sleep 1
-			echo -e "            $ansi_green done. $ansi_std"			
-		;;
+		return $?
+	}
+
+	while getopts ":l:cf" arg; do
+		case "$arg" in
+			l)
+				LAN_CONTROL=$OPTARG
+				;;
+			c)
+				ipset -F adbyby_lan_ac
+				exit 0				
+				;;
+			f)
+				ipset_f && /opt/etc/init.d/S30adbyby stop
+				exit 0
+				;;
 		esac
+	done
+
+	if [ -z "$LAN_CONTROL" ]; then
+		usage 2
+	fi
+
+	ipset_f && ipset_r && fw_rules && start_adbyby
+	[ "$?" = 0 ] || logger "adbyby failed!"
+	exit $?
 	;;
 
 -g | --global)
@@ -1298,7 +1325,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.14 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.10 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
