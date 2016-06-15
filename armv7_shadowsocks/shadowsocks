@@ -122,13 +122,11 @@ case ${1} in
 	if [ ! -f "$autorun" ]; then
 		echo "#!/bin/sh" >> $autorun
 		echo >> $autorun
-		echo "if [ -f /tmp/ppp/options.pppoe ]; then" >> $autorun
-		echo -e "	mount -o bind $PREFIX/opt /opt" >> $autorun
-		echo "	/opt/bin/shadowsocks -m" >> $autorun
-		echo "	/opt/bin/shadowsocks -S" >> $autorun
-		echo "	sleep 1" >> $autorun
-		echo "	/opt/bin/shadowsocks -r" >> $autorun		
-		echo "fi" >> $autorun
+		echo -e "mount -o bind $PREFIX/opt /opt" >> $autorun
+		echo "/opt/bin/shadowsocks -m" >> $autorun
+		echo "/opt/bin/shadowsocks -S" >> $autorun
+		echo "sleep 1" >> $autorun
+		echo "/opt/bin/shadowsocks -r" >> $autorun
 		echo >> $autorun
 
 		sleep 1
@@ -699,11 +697,7 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq
-#		mount -o bind /opt/sbin/iptables /usr/sbin/iptables
-#		mount -o bind /opt/sbin/iptables-restore /usr/sbin/iptables-restore
-#		mount -o bind /opt/sbin/ip6tables /usr/sbin/ip6tables		
-#		mount -o bind /opt/sbin/ip6tables-restore /usr/sbin/ip6tables-restore				
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq				
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
@@ -742,14 +736,15 @@ uptest= none;
 -ad | --adbyby)
 	usage() {
 		cat <<-EOF
-Usage: adbyby [options]
-Valid options are:
-    -l <lan_ip_list>         network control device filters
-    -c <clear_lan_ip>        clean up ip
-    -f                       flush rules of adbyby
-EOF
-	exit $1
-}
+                  Usage: adbyby [options]
+
+                  Valid options are:
+                     -l <lan_ip_list>         network control device filters
+                     -c <clear_lan_ip>        clean up ip
+                     -f                       flush rules of adbyby
+	EOF
+		exit $1
+	}
 
 	ipset_f() {
 		$IPT -D PREROUTING -p tcp --dport 80 \
@@ -1325,7 +1320,7 @@ EOF
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.10 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.15 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
