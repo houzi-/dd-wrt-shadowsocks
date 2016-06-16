@@ -804,7 +804,7 @@ uptest= none;
 	}
 
 	start_adbyby() {
-		[ ! "`ps | grep "adbyby" | grep -v "grep" | wc -l`" -eq 2 ] && {
+		[ ! -f "/var/log/adbyby.lock" ] && {
 			/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		}
 		return $?
@@ -821,6 +821,7 @@ uptest= none;
 				;;
 			f)
 				ipset_f && /opt/etc/init.d/S30adbyby stop
+				rm -rf /var/log/adbyby.lock
 				exit 0
 				;;
 		esac
