@@ -723,7 +723,7 @@ uptest= none;
 		done
 	fi
 	;;
-	
+
 -r | --rules)
 	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
 	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
@@ -1025,7 +1025,21 @@ uptest= none;
       			echo '['$DATE'] No problem, the normal operation of shadowsoks.' >> /var/log/shadowsocks_watchdog.log 2>&1
 		fi
 	fi		
-	
+
+	if [ -f "/var/log/chnroutes.lock" ]; then
+		if [ "`iptables -t nat -nvL | grep "SS_SPEC_WAN_AC" | wc -l`" -eq 3 ]; then
+			:
+		else
+			shadowsocks -r
+		fi
+	else
+		if [ "`iptables -t nat -nvL | grep "gfw_black_list" | wc -l`" -eq 2 ]; then
+			:
+		else
+			shadowsocks -r			
+		fi
+	fi
+
 	dnscrypt=$(ps | grep "dnscrypt-proxy" | grep -v "grep")
 	if [ -f "/var/log/dnscrypt-proxy.lock" ]; then
 		if [ -z "$dnscrypt" ]; then
@@ -1258,7 +1272,7 @@ uptest= none;
     		esac
 	}
 	
-	SCRIPT_INSTALL=$(cd ${SCRIPT_DIR} && cd .. && pwd)	
+	SCRIPT_INSTALL=$(cd ${SCRIPT_DIR} && cd .. && pwd)
 	
 	if [ ! "$SCRIPT_DIR" == "$PREFIX" ]; then
 		sed -i 's;PREFIX='"$PREFIX"';PREFIX='"$SCRIPT_INSTALL"';' $SCRIPT_DIR/shadowsocks
@@ -1320,7 +1334,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.15 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.16 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
