@@ -1336,7 +1336,6 @@ uptest= none;
 	echo -e "$ansi_white   [-u/--update] Update chnroutes Routing Host $ansi_std"
 	echo -e "$ansi_white   [-ug/--update_gfwlist] Update GFWLIST domain $ansi_std"
 	echo -e "$ansi_white   [-c/--check] Guardian ss-redir* $ansi_std"
-	echo -e "$ansi_white   [-cr/--check_rules] Guardian iptables rules $ansi_std"
 	echo -e "$ansi_white   [-sw/--ss_switch] Account switching $ansi_std"
 	echo -e "$ansi_white   [-lc/--lan_control] LAN Device control $ansi_std"
 	echo -e "$ansi_white   [-sa/--services_action] Change all state services $ansi_std"
