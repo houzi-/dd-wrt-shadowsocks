@@ -81,7 +81,7 @@ china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.ch
 
 # alias of iptables
 IPT="/opt/sbin/iptables -t nat"
-IPT_D="/usr/sbin/iptables -t nat"
+ADBYBY="ADBYBY_"
 
 case ${1} in
 
@@ -99,7 +99,7 @@ case ${1} in
 			cd $PREFIX;mkdir -p opt;mkdir -p shadowsocks;cd /;cd /tmp/root
 			cp $SCRIPT_DIR/shadowsocks $PREFIX/shadowsocks
 			mount -o bind $PREFIX/opt /opt
-			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh		
+			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh			
 			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsmasq_* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/iptables* -a -e $SCRIPT_DIR/cron_4.1* ]; then
 				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables* cron_4.1*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
@@ -363,11 +363,11 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh
 
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"	
@@ -452,12 +452,12 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh		
 
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -519,12 +519,12 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh	
+		> $CHECK/cron.1min/check.sh	
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/dnscrypt-proxy_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh		
 		
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -581,11 +581,11 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh	
 	
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -648,11 +648,11 @@ uptest= none;
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
-		> $CHECK/cron.1mins/check.sh		
+		> $CHECK/cron.1min/check.sh		
 		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> $CHECK/cron.5mins/clear.sh
-		sed -i 's/[\t]*//g' $CHECK/cron.1mins/check.sh && \
+		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh	
 		
 		rm -f $PREFIX/shadowsocks/update.lock
@@ -685,7 +685,7 @@ uptest= none;
 	if [ -f "$PREFIX/shadowsocks/chnroutes.lock" ]; then
 		$PREFIX/shadowsocks/shadowsocks -u
 	else
-		echo '['$DATE'] Has loaded China route table.' > /var/log/chnroutes.log
+		:
 	fi
 
 	if [ "$adbyby_filter" == "1" ]; then
@@ -696,7 +696,7 @@ uptest= none;
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
-		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq				
+		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq			
 		/opt/etc/init.d/S22shadowsocks start && touch /var/log/shadowsocks.lock
 #		/opt/etc/init.d/S23ss-tunnel start && touch /var/log/ss-tunnel.lock
 #		/opt/etc/init.d/S26pdnsd start && touch /var/log/pdnsd.lock
@@ -722,7 +722,7 @@ uptest= none;
 		done
 	fi
 	;;
-
+	
 -r | --rules)
 	nvram get wan_ipaddr > /var/log/wan_ipaddr.log
 	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
@@ -746,12 +746,8 @@ uptest= none;
 	}
 
 	ipset_f() {
-		$IPT -D PREROUTING -p tcp --dport 80 \
-		-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC 2>/dev/null
-		$IPT -F ADBYBY_AC 2>/dev/null
-		$IPT -F ADBYBY_FW 2>/dev/null		
-		$IPT -X ADBYBY_AC 2>/dev/null
-		$IPT -X ADBYBY_FW 2>/dev/null		
+		/opt/sbin/iptables-save -c | grep -v "$ADBYBY" | \
+			/opt/sbin/iptables-restore -c 2>/dev/null	
 		ipset -X adbyby_lan_ac 2>/dev/null
 		ipset -X adbyby_wan_ac 2>/dev/null
 		return 0
@@ -806,7 +802,7 @@ uptest= none;
 		[ ! -f "/var/log/adbyby.lock" ] && {
 			/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
 		}
-		return $?
+		return 0
 	}
 
 	while getopts ":l:cf" arg; do
@@ -1023,20 +1019,6 @@ uptest= none;
 			/opt/etc/init.d/S22shadowsocks start
 		else
       			echo '['$DATE'] No problem, the normal operation of shadowsoks.' >> /var/log/shadowsocks_watchdog.log 2>&1
-		fi
-	fi		
-
-	if [ -f "/var/log/chnroutes.lock" ]; then
-		if [ "`iptables -t nat -nvL | grep "SS_SPEC_WAN_AC" | wc -l`" -eq 3 ]; then
-			:
-		else
-			shadowsocks -r
-		fi
-	else
-		if [ "`iptables -t nat -nvL | grep "gfw_black_list" | wc -l`" -eq 2 ]; then
-			:
-		else
-			shadowsocks -r			
 		fi
 	fi
 
@@ -1272,7 +1254,7 @@ uptest= none;
     		esac
 	}
 	
-	SCRIPT_INSTALL=$(cd ${SCRIPT_DIR} && cd .. && pwd)
+	SCRIPT_INSTALL=$(cd ${SCRIPT_DIR} && cd .. && pwd)	
 	
 	if [ ! "$SCRIPT_DIR" == "$PREFIX" ]; then
 		sed -i 's;PREFIX='"$PREFIX"';PREFIX='"$SCRIPT_INSTALL"';' $SCRIPT_DIR/shadowsocks
@@ -1334,7 +1316,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.16 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.17 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
@@ -1354,6 +1336,7 @@ uptest= none;
 	echo -e "$ansi_white   [-u/--update] Update chnroutes Routing Host $ansi_std"
 	echo -e "$ansi_white   [-ug/--update_gfwlist] Update GFWLIST domain $ansi_std"
 	echo -e "$ansi_white   [-c/--check] Guardian ss-redir* $ansi_std"
+	echo -e "$ansi_white   [-cr/--check_rules] Guardian iptables rules $ansi_std"
 	echo -e "$ansi_white   [-sw/--ss_switch] Account switching $ansi_std"
 	echo -e "$ansi_white   [-lc/--lan_control] LAN Device control $ansi_std"
 	echo -e "$ansi_white   [-sa/--services_action] Change all state services $ansi_std"
