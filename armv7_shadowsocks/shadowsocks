@@ -81,7 +81,6 @@ china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.ch
 
 # alias of iptables
 IPT="/opt/sbin/iptables -t nat"
-ADBYBY="ADBYBY_"
 
 case ${1} in
 
@@ -746,8 +745,10 @@ uptest= none;
 	}
 
 	ipset_f() {
-		/opt/sbin/iptables-save -c | grep -v "$ADBYBY" | \
-			/opt/sbin/iptables-restore -c 2>/dev/null	
+		$IPT -F ADBYBY_AC 2>/dev/null
+		$IPT -F ADBYBY_FW 2>/dev/null
+		$IPT -X ADBYBY_AC 2>/dev/null
+		$IPT -X ADBYBY_FW 2>/dev/null	
 		ipset -X adbyby_lan_ac 2>/dev/null
 		ipset -X adbyby_wan_ac 2>/dev/null
 		return 0
@@ -1019,6 +1020,20 @@ uptest= none;
 			/opt/etc/init.d/S22shadowsocks start
 		else
       			echo '['$DATE'] No problem, the normal operation of shadowsoks.' >> /var/log/shadowsocks_watchdog.log 2>&1
+		fi
+	fi
+
+	if [ -f "/var/log/chnroutes.lock" ]; then
+		if [ "`iptables -t nat -nvL | grep "SS_SPEC_WAN_AC" | wc -l`" -eq 3 ]; then
+			:
+		else
+			shadowsocks -r
+		fi
+	else
+		if [ "`iptables -t nat -nvL | grep "gfw_black_list" | wc -l`" -eq 2 ]; then
+			:
+		else
+			shadowsocks -r
 		fi
 	fi
 
@@ -1316,7 +1331,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.17 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.18 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
