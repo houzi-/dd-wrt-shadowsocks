@@ -748,6 +748,8 @@ uptest= none;
 	}
 
 	ipset_f() {
+		$IPT -D PREROUTING -p tcp --dport 80 \
+			-m set ! --match-set adbyby_lan_ac src -j ADBYBY_AC	
 		$IPT -F ADBYBY_AC 2>/dev/null
 		$IPT -F ADBYBY_FW 2>/dev/null
 		$IPT -X ADBYBY_AC 2>/dev/null
