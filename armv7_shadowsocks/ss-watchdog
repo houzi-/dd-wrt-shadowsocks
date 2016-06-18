@@ -35,6 +35,9 @@ touch a $wan_ac_list_bp
 touch a $lan_ac_list_in && \
 touch a $lan_ac_list_out
 
+[ ! -f "$adbyby_lan_list_bp" ] && \
+touch a $adbyby_lan_list_bp
+
 WAN_AC_FW=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_fw | xargs`
 WAN_AC_BP=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_bp | xargs`
 
