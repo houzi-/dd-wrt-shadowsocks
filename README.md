@@ -10,4 +10,4 @@ Version: V1.4-stable
 
 # Usage wiki
 
-**Writting**
+**[shadowsocks Scripting Guide](http://www.router008.com/2016/02/14/ShadowSocks-Scripting-Guide/)**
