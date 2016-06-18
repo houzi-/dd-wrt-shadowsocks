@@ -299,12 +299,36 @@ Your Choice:"
 
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
 		sed -i 's/PROCS=ss-watchdog/PROCS=ss-rules/;s/^ARGS=""/ARGS="-G"/' $CHECK/init.d/S99ss-rules 
-		
+
+		rm -f $CHECK/pdnsd.conf
+		cat > $CHECK/pdnsd.conf <<-end
+global {
+perm_cache=2048;
+cache_dir="/var/pdnsd";
+run_as="nobody";
+server_port = 1054;
+server_ip = 127.0.0.1;  
+status_ctl = on;					               
+query_method=tcp_only;
+min_ttl=6h;       
+max_ttl=1w;        
+timeout=10;        
+}
+
+server {
+label= "google";
+ip = 208.67.222.222; 
+port = 443;   	
+root_server = on;    
+uptest= none;         
+}
+		end
+
 		$PREFIX/shadowsocks/shadowsocks -m
-		$PREFIX/shadowsocks/shadowsocks -S		
+		$PREFIX/shadowsocks/shadowsocks -S
+		$PREFIX/shadowsocks/shadowsocks -ug		
 		sleep 1
 		$PREFIX/shadowsocks/shadowsocks -r
-		$PREFIX/shadowsocks/shadowsocks -ug
 
 		nvram set time_zone="Asia/Shanghai"
 
@@ -329,32 +353,6 @@ Your Choice:"
 		killall dnsmasq && \
 			/opt/etc/init.d/S56dnsmasq restart
 		
-		rm -f $CHECK/pdnsd.conf
-		cat > $CHECK/pdnsd.conf <<-end
-global {
-perm_cache=2048;
-cache_dir="/var/pdnsd";
-run_as="nobody";
-server_port = 1054;
-server_ip = 127.0.0.1;  
-status_ctl = on;					               
-query_method=tcp_only;
-min_ttl=6h;       
-max_ttl=1w;        
-timeout=10;        
-}
-
-server {
-label= "google";
-ip = 208.67.222.222; 
-port = 443;   	
-root_server = on;    
-uptest= none;         
-}
-		end
-		
-		$PREFIX/shadowsocks/shadowsocks run
-		
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
@@ -369,6 +367,7 @@ uptest= none;
 		sed -i 's/[\t]*//g' $CHECK/cron.1min/check.sh && \
 		sed -i 's/[\t]*//g' $CHECK/cron.5mins/clear.sh
 
+		$PREFIX/shadowsocks/shadowsocks -b
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"	
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -461,6 +460,7 @@ uptest= none;
 
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
+		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -528,6 +528,7 @@ uptest= none;
 		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
+		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -589,6 +590,7 @@ uptest= none;
 	
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
+		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -656,6 +658,7 @@ uptest= none;
 		
 		rm -f $PREFIX/shadowsocks/update.lock
 		rm -f $PREFIX/shadowsocks/chnroutes.lock
+		$PREFIX/shadowsocks/shadowsocks -b		
 		echo -e "$BOLD Set successfully, please reboot the router. $NORM"		
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
 		killall shadowsocks > /dev/null
@@ -1332,7 +1335,7 @@ uptest= none;
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
 	echo -e "$ansi_green # Last edited: 2016.6.18 $ansi_std"
-	echo -e "$ansi_green # Version: V1.4-beta (ARM version) $ansi_std"
+	echo -e "$ansi_green # Version: V1.4-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
