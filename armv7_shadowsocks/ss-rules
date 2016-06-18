@@ -12,7 +12,7 @@
 
 IPT="/opt/sbin/iptables -t nat"
 IPT_M="/opt/sbin/iptables -t mangle"
-TAG="SS_SPEC"
+IPTS="/usr/sbin/iptables-restore"
 
 usage() {
 	cat <<-EOF
@@ -43,8 +43,11 @@ loger() {
 }
 
 flush_r() {
-	/opt/sbin/iptables-save -c | grep -v "$TAG" | \
-		/opt/sbin/iptables-restore -c 2>/dev/null	
+	$IPT -F 2>/dev/null
+	$IPT_M -F 2>/dev/null
+	$IPT -X SS_SPEC_WAN_AC 2>/dev/null
+	$IPT -X SS_SPEC_WAN_FW 2>/dev/null
+	$IPT_M -X SS_SPEC_TPROXY 2>/dev/null	
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	ipset -X ss_spec_lan_ac 2>/dev/null
@@ -58,7 +61,14 @@ flush_r() {
 		-j REDIRECT --to-port $PORT 2>/dev/null
 	ipset -X gfw_black_list 2>/dev/null
 }
+	[ -f "/var/log/adbyby.lock" ] && {
+	$IPT -X ADBYBY_AC 2>/dev/null
+	$IPT -X ADBYBY_FW 2>/dev/null
+	ipset -X adbyby_lan_ac 2>/dev/null
+	ipset -X adbyby_wan_ac 2>/dev/null
+	}
 	restore_dnsamsq
+	our_rule
 	return 0
 }
 
@@ -73,6 +83,10 @@ gfw_r() {
 			-j REDIRECT --to-port $PORT
 		touch a /var/log/gfwlist.lock
 	fi
+}
+
+our_rule() {
+	$IPTS /tmp/.ipt	
 }
 
 ipset_r() {
