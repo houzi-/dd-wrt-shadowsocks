@@ -345,7 +345,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -435,7 +435,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -503,7 +503,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -566,7 +566,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -634,7 +634,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get pppoeserver_pool`,`nvram get pppoeserver_pool | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
