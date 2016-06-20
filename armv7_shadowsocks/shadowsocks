@@ -699,6 +699,22 @@ uptest= none;
 -S | --START)
 	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
 	
+	check_dns() {
+		old_dns=`cat /opt/etc/init.d/S24chinadns | sed -n "5p" | awk '/^.*/{print $6}' | sed -e 's/,127.*//' -e 's/,.*//'`
+		new_dns=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
+		if [ "$old_dns" == "$new_dns" ]; then
+			:
+		else
+			if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
+				CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+				sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+			else
+				CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
+				sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+			fi	
+		fi
+	}
+
 	if [ -f "$PREFIX/shadowsocks/chnroutes.lock" ]; then
 		$PREFIX/shadowsocks/shadowsocks -u
 	else
@@ -710,6 +726,8 @@ uptest= none;
 			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S30adbyby (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
 		fi	
 	fi	
+
+	check_dns	
 	
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
