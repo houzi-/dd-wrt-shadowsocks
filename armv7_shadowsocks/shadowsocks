@@ -380,9 +380,14 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 		
-		CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
-		sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
-	
+		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
+			CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		else
+			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
+			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		fi
+
 		rm -f $CHECK/init.d/S24cn
 		chmod +x $CHECK/init.d/S2*
 
@@ -473,8 +478,13 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S29dnscrypt-proxy (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
-		CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
-		sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
+			CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		else
+			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
+			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		fi
 
 		rm -f $CHECK/init.d/S24cn
 		chmod +x $CHECK/init.d/S2*
@@ -604,8 +614,13 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S23ss-tunnel (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
-		CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
-		sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
+			CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		else
+			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
+			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+		fi
 	
 		rm -f $CHECK/init.d/S24cn
 		chmod +x $CHECK/init.d/S2*	
@@ -969,8 +984,7 @@ uptest= none;
 	else
 		wget -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
 		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /tmp/root
-		cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' > $PREFIX/shadowsocks/dns.list
-		DNS=`sed -n '1p' $PREFIX/shadowsocks/dns.list`
+		DNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 		sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
 	fi
 
@@ -1337,7 +1351,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.18 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.20 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
