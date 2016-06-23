@@ -379,15 +379,15 @@ uptest= none;
 
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
-		
+
 		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-			CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			CHINADNS=`nvram get wan_get_dns | awk '/^^.*/{print $1}'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		else
 			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		fi
-
+	
 		rm -f $CHECK/init.d/S24cn
 		chmod +x $CHECK/init.d/S2*
 
@@ -479,7 +479,7 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
 		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-			CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			CHINADNS=`nvram get wan_get_dns | awk '/^^.*/{print $1}'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		else
 			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
@@ -615,13 +615,13 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
 		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-			CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			CHINADNS=`nvram get wan_get_dns | awk '/^^.*/{print $1}'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		else
 			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		fi
-	
+
 		rm -f $CHECK/init.d/S24cn
 		chmod +x $CHECK/init.d/S2*	
 			
@@ -698,8 +698,9 @@ uptest= none;
 	
 -S | --START)
 	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
-	
+
 	check_dns() {
+		killall dnsmasq && startservice dnsmasq
 		old_dns=`cat /opt/etc/init.d/S24chinadns | sed -n "5p" | awk '/^.*/{print $6}' | sed -e 's/,127.*//' -e 's/,.*//'`
 		new_dns=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 		if [ "$old_dns" == "$new_dns" ]; then
@@ -707,11 +708,11 @@ uptest= none;
 		else
 			if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
 				CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
-				sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
 			else
 				CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
-				sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
+				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
 			fi	
 		fi
@@ -729,8 +730,8 @@ uptest= none;
 		fi	
 	fi	
 
-	check_dns	
-	
+	check_dns
+
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
 		mount -o bind /opt/sbin/dnsmasq /usr/sbin/dnsmasq			
@@ -879,7 +880,7 @@ uptest= none;
 			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} global?(y/N) $ansi_std"
 			read choice
 			if [ "${choice}" == "y" ]; then
-				touch a $CHECK/global.list
+				touch $CHECK/global.list
 				sed -i 's/\$ignore_list/$global_list/' /opt/bin/ss-watchdog
 				echo -e -n "$ansi_white ${2} Global... "
 				sleep 1
@@ -893,7 +894,7 @@ uptest= none;
 			echo -e "$ansi_red **WARNING** USE AT YOUR OWN RISK! You want to ${2} global?(y/N) $ansi_std"
 			read choice
 			if [ "${choice}" == "y" ]; then
-				touch a $CHECK/global.list	
+				touch $CHECK/global.list	
 				sed -i 's/\$global_list/$ignore_list/' /opt/bin/ss-watchdog
 				echo -e -n "$ansi_white ${2} Global... "
 				sleep 1
@@ -1371,8 +1372,8 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.21 $ansi_std"
-	echo -e "$ansi_green # Version: V1.4-stable (ARM version) $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.23 $ansi_std"
+	echo -e "$ansi_green # Version: V1.4.1-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
