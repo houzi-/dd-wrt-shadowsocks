@@ -35,6 +35,9 @@ TO=""
 # ADBYBY ad filter
 adbyby_filter=0
 
+# Check DNS
+check_dns=0
+
 READ="\033[31;1m"
 BOLD="\033[42;1m"	
 NORM="\033[0m"
@@ -381,7 +384,7 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
 		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-			CHINADNS=`nvram get wan_get_dns | awk '/^^.*/{print $1}'`
+			CHINADNS=`nvram get wan_get_dns | awk '/^.*/{print $1}'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		else
 			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
@@ -479,7 +482,7 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
 		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-			CHINADNS=`nvram get wan_get_dns | awk '/^^.*/{print $1}'`
+			CHINADNS=`nvram get wan_get_dns | awk '/^.*/{print $1}'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		else
 			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
@@ -615,7 +618,7 @@ uptest= none;
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start|restart))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks	
 
 		if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-			CHINADNS=`nvram get wan_get_dns | awk '/^^.*/{print $1}'`
+			CHINADNS=`nvram get wan_get_dns | awk '/^.*/{print $1}'`
 			sed -i "s/^ARGS=\(.*\)114.114.114.114\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 		else
 			CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
@@ -706,8 +709,8 @@ uptest= none;
 		if [ "$old_dns" == "$new_dns" ]; then
 			echo "DNS is same!" > /var/log/check_dns.log
 		else
-			if [ -n "`nvram get wan_get_dns | sed 's/ /,/'`" ]; then
-				CHINADNS=`nvram get wan_get_dns | sed 's/ /,/'`
+			if [ -n "`nvram get wan_get_dns | sed 's/ .*//'`" ]; then
+				CHINADNS=`nvram get wan_get_dns | sed 's/ .*//'`
 				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
 				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
 			else
@@ -730,7 +733,7 @@ uptest= none;
 		fi	
 	fi	
 
-	check_dns
+	[ "$check_dns" == "1" ] && check_dns
 
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
 	if [ -z "$PROCESS" ]; then
@@ -1372,7 +1375,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.23 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.24 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4.1-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
