@@ -34,6 +34,7 @@ TO=""
 
 # ADBYBY ad filter
 adbyby_filter=0
+adbyby_filter_global=0
 
 # Check DNS
 check_dns=0
@@ -727,10 +728,17 @@ uptest= none;
 		:
 	fi
 
+	if [ ! -f "/opt/var/log/adbyby.lock" ]; then
+		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S30adbyby (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
+			
+	fi
+
 	if [ "$adbyby_filter" == "1" ]; then
-		if [ ! -f "/opt/var/log/adbyby.lock" ]; then
-			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S30adbyby (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
-		fi	
+		touch /var/log/adbyby.lock
+	else
+		if [ "$adbyby_filter_global" == "1" ]; then
+		touch /var/log/adbyby_global.lock
+		fi			
 	fi	
 
 	[ "$check_dns" == "1" ] && check_dns
@@ -744,7 +752,7 @@ uptest= none;
 #		/opt/etc/init.d/S24chinadns start && touch /var/log/chinadns.lock
 #		/opt/etc/init.d/S27pcap_dnsproxy start && touch /var/log/pcap_dnsproxy.lock
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
-#		/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
+#		/opt/etc/init.d/S30adbyby start && touch /opt/var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
 		exit 0	
 	else
@@ -776,12 +784,14 @@ uptest= none;
 -ad | --adbyby)
 	usage() {
 		cat <<-EOF
-                  Usage: adbyby [options]
+		Usage: adbyby [options]
 
-                  Valid options are:
-                     -l <lan_ip_list>         network control device filters
-                     -c <clear_lan_ip>        clean up ip
-                     -f                       flush rules of adbyby
+		Valid options are:
+
+		    -l <lan_ip_list>         network control device filters
+		    -c <clear_lan_ip>        clean up ip
+		    -A <adbyby_dns_list>
+		    -f                       flush rules of adbyby
 	EOF
 		exit $1
 	}
@@ -790,13 +800,28 @@ uptest= none;
 		$IPT -D PREROUTING -p tcp --dport 80 \
 			-m set ! --match-set adbyby_lan_ac src \
 			-j ADBYBY_AC 2>/dev/null
+		$IPT -D PREROUTING -p tcp --dport 80 \
+			-m set --match-set ADBYBY dst \
+			-j REDIRECT --to 8118 2>/dev/null
 		$IPT -F ADBYBY_AC 2>/dev/null
 		$IPT -F ADBYBY_FW 2>/dev/null
 		$IPT -X ADBYBY_AC 2>/dev/null
 		$IPT -X ADBYBY_FW 2>/dev/null	
 		ipset -X adbyby_lan_ac 2>/dev/null
 		ipset -X adbyby_wan_ac 2>/dev/null
+		ipset -X ADBYBY 2>/dev/null		
 		return 0
+	}
+
+	adbyby_dns() {
+		if [ "$ADBYBY_LIST" = 1 ]; then
+			ipset -N ADBYBY hash:ip
+			ipset -A ADBYBY 100.100.100.100
+			$IPT -A PREROUTING -p tcp --dport 80 \
+				-m set --match-set ADBYBY dst \
+				-j REDIRECT --to 8118
+		fi
+		return $?		
 	}
 
 	ipset_r() {		
@@ -845,13 +870,13 @@ uptest= none;
 	}
 
 	start_adbyby() {
-		[ ! -f "/var/log/adbyby.lock" ] && {
-			/opt/etc/init.d/S30adbyby start && touch /var/log/adbyby.lock
+		[ ! -f "/opt/var/log/adbyby.lock" ] && {
+			/opt/etc/init.d/S30adbyby start && touch /opt/var/log/adbyby.lock
 		}
 		return 0
 	}
 
-	while getopts ":l:cf" arg; do
+	while getopts ":l:cAf" arg; do
 		case "$arg" in
 			l)
 				LAN_CONTROL=$OPTARG
@@ -860,21 +885,34 @@ uptest= none;
 				ipset -F adbyby_lan_ac
 				exit 0				
 				;;
+			A)	
+				ADBYBY_LIST=1
+				;;
 			f)
 				ipset_f && /opt/etc/init.d/S30adbyby stop
-				rm -rf /var/log/adbyby.lock
+				rm -rf /opt/var/log/adbyby.lock
 				exit 0
 				;;
 		esac
 	done
 
-	if [ -z "$LAN_CONTROL" ]; then
-		usage 2
+	if [ "$ADBYBY_LIST" = 1 ]; then
+		:
+	else
+		if [ -z "$LAN_CONTROL" ]; then
+			usage 2
+		fi
 	fi
 
-	ipset_f && ipset_r && fw_rules && start_adbyby
-	[ "$?" = 0 ] || logger "adbyby failed!"
-	exit $?
+	if [ -n "$LAN_CONTROL" ]; then
+		ipset_f && ipset_r && fw_rules && start_adbyby
+		[ "$?" = 0 ] || logger "adbyby failed!"
+		exit $?
+	else
+		ipset_f && adbyby_dns
+		[ "$?" = 0 ] || logger "adbyby failed!"
+		exit $?
+	fi
 	;;
 
 -g | --global)
@@ -1375,7 +1413,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.24 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.26 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4.1-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"

@@ -54,8 +54,12 @@ $START -s $server_ip -l $local_port -i $ignore_list -o -e "-m multiport --dports
 	-w "$WAN_AC_FW" \
 	-u
 
-adbyby_start() {
-	[ -f "/var/log/adbyby.lock" ] && shadowsocks -ad -l $adbyby_lan_list_bp
+adbyby_global_start() {
+	[ -f "/opt/var/log/adbyby.lock" ] && shadowsocks -ad -l $adbyby_lan_list_bp
 }
 
-adbyby_start
+adbyby_start() {
+	[ -f "/opt/var/log/adbyby.lock" ] && shadowsocks -ad -A
+}
+
+[ -f /var/log/adbyby_global.lock ] && adbyby_global_start || adbyby_start
