@@ -733,6 +733,7 @@ uptest= none;
 		fi
 	}
 
+	sleep 2
 	if [ -f "$PREFIX/shadowsocks/chnroutes.lock" ]; then
 		$PREFIX/shadowsocks/shadowsocks -u
 	else
