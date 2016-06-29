@@ -78,7 +78,7 @@ DATE=$(date "+%Y-%m-%d %H:%M:%S")
 CHECK=/opt/etc
 
 # Link
-gfw_block_list="https://raw.githubusercontent.com/koolshare/koolshare.github.io/master/maintain_files/gfwlist.conf"
+ops_list="http://entware.mirrors.ligux.com/opslist/opslist.conf"
 china_routing_list="http://entware.mirrors.ligux.com/apnic/delegated-apnic-latest"
 china_domain_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/accelerated-domains.china.conf"
 china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.china.conf"
@@ -1095,10 +1095,10 @@ uptest= none;
 		
 	DNS=127.0.0.1#1054
 		
-	cd $PREFIX/shadowsocks/dnsmasq.d;curl --insecure -O $gfw_block_list;cd /tmp/root
+	cd $PREFIX/shadowsocks/dnsmasq.d;curl --insecure -O $ops_list;cd /tmp/root
 		
-	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
-	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/gfwlist.conf
+	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/ops_list.conf
+	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/ops_list.conf
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"
 	killall dnsmasq && \
@@ -1438,8 +1438,8 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.6.28 $ansi_std"
-	echo -e "$ansi_green # Version: V1.4.1-beta (ARM version) $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.6.29 $ansi_std"
+	echo -e "$ansi_green # Version: V1.4.1-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
