@@ -8,7 +8,7 @@
 # --------------------------------------------------------------------------------------------------------
 #
 
-# Debug 
+# Debug
 #set -x
 
 # opkg source site
@@ -104,7 +104,7 @@ case ${1} in
 			mount -o bind $PREFIX/opt /opt
 			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh			
 			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/dnsmasq_* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/iptables* -a -e $SCRIPT_DIR/cron_4.1* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* dnsmasq_2.75* ipset* kmod* iptables* cron_4.1*
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* dnsmasq_2.7* ipset* kmod* iptables* cron_4.1*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -714,7 +714,10 @@ uptest= none;
 -S | --START)
 	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
 
-	killall dnsmasq && startservice dnsmasq
+	[ -f /tmp/resolv.dnsmasq ] && \
+		killall dnsmasq && \
+		startservice dnsmasq
+
 	check_dns() {
 		old_dns=`cat /opt/etc/init.d/S24chinadns | sed -n "5p" | awk '/^.*/{print $6}' | sed -e 's/,127.*//' -e 's/,.*//'`
 		new_dns=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
