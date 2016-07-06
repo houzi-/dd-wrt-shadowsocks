@@ -349,7 +349,7 @@ uptest= none;
 		echo -e "min-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\nconf-dir=$CHECK/dnsmasq.d\
 		\ninterface=`nvram get lan_ifname`\
 		\nresolv-file=/tmp/resolv.dnsmasq\
 		\ndhcp-leasefile=/tmp/dnsmasq.leases\
@@ -444,7 +444,7 @@ uptest= none;
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\nconf-dir=$CHECK/dnsmasq.d\
 		\ninterface=`nvram get lan_ifname`\
 		\nresolv-file=/tmp/resolv.dnsmasq\
 		\ndhcp-leasefile=/tmp/dnsmasq.leases\
@@ -517,7 +517,7 @@ uptest= none;
 		\nmin-cache-ttl=6000\ncache-size=10000\nproxy-dnssec\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\nconf-dir=$CHECK/dnsmasq.d\
 		\ninterface=`nvram get lan_ifname`\
 		\nresolv-file=/tmp/resolv.dnsmasq\
 		\ndhcp-leasefile=/tmp/dnsmasq.leases\
@@ -580,7 +580,7 @@ uptest= none;
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\nconf-dir=$CHECK/dnsmasq.d\
 		\ninterface=`nvram get lan_ifname`\
 		\nresolv-file=/tmp/resolv.dnsmasq\
 		\ndhcp-leasefile=/tmp/dnsmasq.leases\
@@ -653,7 +653,7 @@ uptest= none;
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
-		\nconf-dir=$PREFIX/shadowsocks/dnsmasq.d\
+		\nconf-dir=$CHECK/dnsmasq.d\
 		\ninterface=`nvram get lan_ifname`\
 		\nresolv-file=/tmp/resolv.dnsmasq\
 		\ndhcp-leasefile=/tmp/dnsmasq.leases\
@@ -727,11 +727,11 @@ uptest= none;
 			if [ -n "`nvram get wan_get_dns | sed 's/ .*//'`" ]; then
 				CHINADNS=`nvram get wan_get_dns | sed 's/ .*//'`
 				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
-				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
+				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $CHECK/dnsmasq.d/accelerated-domains.china.conf
 			else
 				CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
-				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
+				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $CHECK/dnsmasq.d/accelerated-domains.china.conf
 			fi	
 		fi
 	}
@@ -769,6 +769,9 @@ uptest= none;
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
 #		/opt/etc/init.d/S30adbyby start && touch /opt/var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
+		ps | grep "dnsmasq" | grep -v "grep" \
+			| sed -e "s;.*S;;" -e "s/    //" \
+			| md5sum | sed -e "s/  -//" > /opt/var/log/dnsmasq_md5
 		exit 0	
 	else
 		for i in `cat /var/log/server.txt`;do
@@ -973,9 +976,9 @@ uptest= none;
 	;;
 
 -u | --update)
-	directory=$(cd $PREFIX/shadowsocks && ls | grep "dnsmasq.d" | grep -v "grep")
+	directory=$(cd $CHECK && ls | grep "dnsmasq.d" | grep -v "grep")
 	if [ -z "$directory" ]; then
-		cd $PREFIX/shadowsocks && mkdir dnsmasq.d
+		cd $CHECK && mkdir dnsmasq.d
 	fi
 
 	if [ -f "$CHECK/ignore.list" ]; then
@@ -1060,9 +1063,9 @@ uptest= none;
 		rm -f /tmp/Routing_IPv4.txt /tmp/Routing_IPv4_tmp.txt /tmp/Routing_IPv6.txt /tmp/Routing_IPv6_tmp.txt /tmp/Routing.txt
 	else
 		wget -t0 -O- $china_routing_list | awk -F\| '/CN\|ipv4/ { printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > $CHECK/chnroute.txt
-		cd $PREFIX/shadowsocks/dnsmasq.d/;curl -s --insecure -O $china_domain_list;cd /tmp/root
+		cd $CHECK/dnsmasq.d;curl -s --insecure -O $china_domain_list;cd /tmp/root
 		DNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
-		sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/accelerated-domains.china.conf
+		sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $CHECK/dnsmasq.d/accelerated-domains.china.conf
 	fi
 
 	rm -f $PREFIX/shadowsocks/dns.list
@@ -1092,17 +1095,17 @@ uptest= none;
 	
 -ug | --update_gfwlist)
 	echo -e -n "$ansi_white Updating gfwlist... "
-	directory=$(cd $PREFIX/shadowsocks && ls | grep "dnsmasq.d" | grep -v "grep")
+	directory=$(cd $CHECK && ls | grep "dnsmasq.d" | grep -v "grep")
 	if [ -z "$directory" ]; then
-		cd $PREFIX/shadowsocks && mkdir dnsmasq.d
+		cd $CHECK && mkdir dnsmasq.d
 	fi
 		
 	DNS=127.0.0.1#1054
 		
-	cd $PREFIX/shadowsocks/dnsmasq.d;curl --insecure -O $ops_list;cd /tmp/root
+	cd $CHECK/dnsmasq.d;curl --insecure -O $ops_list;cd /tmp/root
 		
-	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $PREFIX/shadowsocks/dnsmasq.d/ops_list.conf
-	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $PREFIX/shadowsocks/dnsmasq.d/ops_list.conf
+	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $CHECK/dnsmasq.d/ops_list.conf
+	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $CHECK/dnsmasq.d/ops_list.conf
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"
 	killall dnsmasq && \
@@ -1120,6 +1123,15 @@ uptest= none;
 		fi
 	fi
 
+	dnsmasq_md5=`cat /opt/var/log/dnsmasq_md5 | sed -n "1p"`
+	dnsamsq_md5_new=`ps | grep "dnsmasq" | grep -v "grep" | sed -e "s;.*S;;" -e "s/    //" | md5sum | sed -e "s/  -//"`
+	if [ "$dnsmasq_md5" == "$dnsamsq_md5_new" ]; then
+		:
+	else
+		killall dnsmasq  && \
+			/opt/etc/init.d/S56dnsmasq start
+	fi	
+	
 	if [ -f "/var/log/chnroutes.lock" ]; then
 		if [ "`iptables -t nat -nvL | grep "SS_SPEC_WAN_AC" | wc -l`" -eq 3 ]; then
 			:
