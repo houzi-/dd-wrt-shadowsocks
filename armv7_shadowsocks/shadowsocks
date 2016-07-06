@@ -1104,8 +1104,8 @@ uptest= none;
 		
 	cd $CHECK/dnsmasq.d;curl --insecure -O $ops_list;cd /tmp/root
 		
-	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $CHECK/dnsmasq.d/ops_list.conf
-	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $CHECK/dnsmasq.d/ops_list.conf
+	sed -i "s|^\(server.*\)/[^/]*$|\1/$DNS|" $CHECK/dnsmasq.d/opslist.conf
+	sed -i "s|^\(ipset.*\)/[^/]*$|\1/gfw_black_list|" $CHECK/dnsmasq.d/opslist.conf
 	sleep 1
 	echo -e "            $ansi_green done. $ansi_std"
 	killall dnsmasq && \
