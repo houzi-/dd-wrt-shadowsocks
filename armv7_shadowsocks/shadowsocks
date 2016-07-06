@@ -253,7 +253,7 @@ case ${1} in
 
 	ping_ip
 	if [ ! "$?" = 0 ]; then
-		echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks ss_switch"$NORM
+		echo -e "$WARNING You input an incorrect IP, please re-enter your: $ansi_white \nshadowsocks -su"$NORM
 		exit 0
 	fi
 
@@ -714,7 +714,7 @@ uptest= none;
 -S | --START)
 	sed -n 's/.*ver": *"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > /var/log/server.txt
 
-	[ -f /tmp/resolv.dnsmasq ] && \
+	[ ! -f /tmp/resolv.dnsmasq ] && \
 		killall dnsmasq && \
 		startservice dnsmasq
 
