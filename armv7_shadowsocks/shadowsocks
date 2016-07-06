@@ -345,7 +345,6 @@ uptest= none;
 
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
-		nvram commit
 		echo -e "min-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
 		\nmin-port=4096\nrebind-localhost-ok\
@@ -368,7 +367,8 @@ uptest= none;
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"
-
+		nvram commit
+		
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
 		> $CHECK/cron.1min/check.sh		
@@ -439,7 +439,6 @@ uptest= none;
 
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
-		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
@@ -463,6 +462,7 @@ uptest= none;
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"		
+		nvram commit
 
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "shadowsocks -c" \
@@ -512,7 +512,6 @@ uptest= none;
 
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
-		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\nproxy-dnssec\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
@@ -536,7 +535,8 @@ uptest= none;
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"	
-
+		nvram commit
+	
 		echo -e $INFO Configuring crontab_custom...		
 		echo -e "shadowsocks -c" \
 		> $CHECK/cron.1min/check.sh	
@@ -575,7 +575,6 @@ uptest= none;
 
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
-		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
@@ -599,6 +598,7 @@ uptest= none;
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"			
+		nvram commit
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
@@ -648,7 +648,6 @@ uptest= none;
 		
 		echo -e $INFO Configuring dnsmasq_custom...
 		nvram set cron_enable=0
-		nvram commit
 		echo -e "no-resolv\nno-poll\nserver=127.0.0.1#5353\
 		\nmin-cache-ttl=6000\ncache-size=10000\
 		\nexpand-hosts\naddn-hosts=/tmp/hosts\
@@ -672,6 +671,7 @@ uptest= none;
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
 		SCR=`sed -e '' /var/log/scr_c.txt`
 		nvram set rc_startup="$SCR"			
+		nvram commit
 
 		echo -e $INFO Configuring crontab_custom...
 		echo -e "shadowsocks -c" \
