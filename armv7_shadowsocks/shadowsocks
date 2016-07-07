@@ -36,6 +36,9 @@ TO=""
 adbyby_filter=0
 adbyby_filter_global=0
 
+# ADBYBY_FILTER_RULES
+adbyby_dns="http://entware.mirrors.ligux.com/adbyby_dns/adbyby_dns"
+
 # Check DNS
 check_dns=0
 
@@ -839,6 +842,7 @@ uptest= none;
 				-m set --match-set ADBYBY dst \
 				-j REDIRECT --to 8118
 		fi
+		[ ! -f $CHECK/dnsmasq.d/adbyby.dns ] && wget -t0 -O- $adbyby_dns > $CHECK/dnsmasq.d/adbyby.dns
 		return $?		
 	}
 
@@ -927,7 +931,7 @@ uptest= none;
 		[ "$?" = 0 ] || logger "adbyby failed!"
 		exit $?
 	else
-		ipset_f && adbyby_dns
+		ipset_f && adbyby_dns && start_adbyby
 		[ "$?" = 0 ] || logger "adbyby failed!"
 		exit $?
 	fi
@@ -985,6 +989,10 @@ uptest= none;
 		rm -f $CHECK/ignore.list
 	fi
 
+	[ ! -f /tmp/resolv.dnsmasq ] && \
+		killall dnsmasq && \
+		startservice dnsmasq	
+	
 	wget -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
 	
 	IGNORE_TEMP_LIST=/var/log/ignore_tmp.txt
@@ -1099,7 +1107,11 @@ uptest= none;
 	if [ -z "$directory" ]; then
 		cd $CHECK && mkdir dnsmasq.d
 	fi
-		
+
+	[ ! -f /tmp/resolv.dnsmasq ] && \
+		killall dnsmasq && \
+		startservice dnsmasq
+	
 	DNS=127.0.0.1#1054
 		
 	cd $CHECK/dnsmasq.d;curl --insecure -O $ops_list;cd /tmp/root
@@ -1454,7 +1466,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.7.6 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.7.7 $ansi_std"
 	echo -e "$ansi_green # Version: V1.4.2-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
