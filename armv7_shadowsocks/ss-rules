@@ -115,6 +115,11 @@ fw_rule() {
 restore_dnsamsq() {
 	stopservice dnsmasq && \
 	/opt/etc/init.d/S56dnsmasq start
+	ps | grep "dnsmasq" | grep -v "grep" \
+		| sed -e "s;.*S;;" -e "s/    //" \
+		| md5sum | sed -e "s/  -//" \
+		> /opt/var/log/dnsmasq_md5
+	return $?	
 }
 
 ac_rule() {
@@ -241,11 +246,11 @@ fi
 if [ -n "$IGNORE_LIST" ]; then
 	flush_r && fw_rule && ipset_r && ac_rule && tp_rule
 	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
-	touch a /var/log/chnroutes.lock
+	touch /var/log/chnroutes.lock
 	exit $?
 else
 	flush_r && gfw_r
 	[ "$?" = 0 ] && loger 6 "Load gfwlist successful" || loger 3 "Start failed!"
-	touch a /var/log/gfwlist.lock
+	touch /var/log/gfwlist.lock
 	exit $?
 fi
