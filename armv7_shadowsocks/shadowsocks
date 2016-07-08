@@ -1136,7 +1136,7 @@ uptest= none;
 		else
         		echo '['$DATE'] Starting dnsmasq.' >> /var/log/dnsmasq_watchdog.log 2>&1
 			killall dnsmasq  && \
-#				/opt/etc/init.d/S56dnsmasq start
+				/opt/etc/init.d/S56dnsmasq start
 		fi
 	fi	
 	
@@ -1192,7 +1192,7 @@ uptest= none;
 		if [ -f "/var/log/chinadns.lock" ]; then
 			if [ -z "$CHINADNS" ]; then
 				echo '['$DATE'] ChinaDNS is restarting.' >> /var/log/chinadns_watchdog.log 2>&1
-				/opt/etc/init.d/S24chinadns start
+#				/opt/etc/init.d/S24chinadns start
 			else
 				echo '['$DATE'] ChinaDNS no problem.' >> /var/log/chinadns_watchdog.log 2>&1
 			fi
