@@ -115,10 +115,6 @@ fw_rule() {
 restore_dnsamsq() {
 	stopservice dnsmasq && \
 	/opt/etc/init.d/S56dnsmasq start
-	ps | grep "dnsmasq" | grep -v "grep" \
-		| sed -e "s;.*S;;" -e "s/    //" \
-		| md5sum | sed -e "s/  -//" \
-		> /opt/var/log/dnsmasq_md5
 	return $?	
 }
 
