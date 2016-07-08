@@ -358,7 +358,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/.$/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -453,7 +453,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/.$/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -526,7 +526,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/.$/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -589,7 +589,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/.$/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -662,7 +662,7 @@ uptest= none;
 		\ndhcp-lease-max=50\
 		\ndhcp-option=`nvram get lan_ifname`,3,`nvram get lan_ipaddr`\
 		\ndhcp-authoritative\
-		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/100/149/g"`,`nvram get lan_netmask`,1440m\
+		\ndhcp-range=`nvram get lan_ifname`,`nvram get lan_ipaddr | sed -e "s/.$/100/"`,`nvram get lan_ipaddr | sed -e "s/.$/149/g"`,`nvram get lan_netmask`,1440m\
 		\nstop-dns-rebind" \
 		> $CHECK/dnsmasq.conf
 		sed -i 's/[\t]*//g' $CHECK/dnsmasq.conf
@@ -772,9 +772,6 @@ uptest= none;
 #		/opt/etc/init.d/S29dnscrypt-proxy start && touch /var/log/dnscrypt-proxy.lock
 #		/opt/etc/init.d/S30adbyby start && touch /opt/var/log/adbyby.lock
 		/opt/etc/init.d/S10cron start
-		ps | grep "dnsmasq" | grep -v "grep" \
-			| sed -e "s;.*S;;" -e "s/    //" \
-			| md5sum | sed -e "s/  -//" > /opt/var/log/dnsmasq_md5
 		exit 0	
 	else
 		for i in `cat /var/log/server.txt`;do
@@ -989,10 +986,6 @@ uptest= none;
 		rm -f $CHECK/ignore.list
 	fi
 
-	[ ! -f /tmp/resolv.dnsmasq ] && \
-		killall dnsmasq && \
-		startservice dnsmasq	
-	
 	wget -t0 -O- $china_routing_list | grep ipv4 | grep CN | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > /var/log/ignore_tmp.txt	
 	
 	IGNORE_TEMP_LIST=/var/log/ignore_tmp.txt
@@ -1107,11 +1100,7 @@ uptest= none;
 	if [ -z "$directory" ]; then
 		cd $CHECK && mkdir dnsmasq.d
 	fi
-
-	[ ! -f /tmp/resolv.dnsmasq ] && \
-		killall dnsmasq && \
-		startservice dnsmasq
-	
+		
 	DNS=127.0.0.1#1054
 		
 	cd $CHECK/dnsmasq.d;curl --insecure -O $ops_list;cd /tmp/root
@@ -1137,11 +1126,18 @@ uptest= none;
 
 	dnsmasq_md5=`cat /opt/var/log/dnsmasq_md5 | sed -n "1p"`
 	dnsamsq_md5_new=`ps | grep "dnsmasq" | grep -v "grep" | sed -e "s;.*S;;" -e "s/    //" | md5sum | sed -e "s/  -//"`
-	if [ "$dnsmasq_md5" == "$dnsamsq_md5_new" ]; then
-		:
+
+	if [ "`ps | grep "dnsmasq" | grep -v "grep" | wc -l`" -eq 0 ]; then
+        		echo '['$DATE'] Starting dnsmasq.' >> /var/log/dnsmasq_watchdog.log 2>&1		
+		/opt/etc/init.d/S56dnsmasq start
 	else
-		killall dnsmasq  && \
-			/opt/etc/init.d/S56dnsmasq start
+		if [ "$dnsmasq_md5" == "$dnsamsq_md5_new" ]; then
+			:
+		else
+        		echo '['$DATE'] Starting dnsmasq.' >> /var/log/dnsmasq_watchdog.log 2>&1
+			killall dnsmasq  && \
+#				/opt/etc/init.d/S56dnsmasq start
+		fi
 	fi	
 	
 	if [ -f "/var/log/chnroutes.lock" ]; then
@@ -1196,7 +1192,7 @@ uptest= none;
 		if [ -f "/var/log/chinadns.lock" ]; then
 			if [ -z "$CHINADNS" ]; then
 				echo '['$DATE'] ChinaDNS is restarting.' >> /var/log/chinadns_watchdog.log 2>&1
-#				/opt/etc/init.d/S24chinadns start
+				/opt/etc/init.d/S24chinadns start
 			else
 				echo '['$DATE'] ChinaDNS no problem.' >> /var/log/chinadns_watchdog.log 2>&1
 			fi
@@ -1466,8 +1462,8 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.7.7 $ansi_std"
-	echo -e "$ansi_green # Version: V1.4.2-stable (ARM version) $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.7.8 $ansi_std"
+	echo -e "$ansi_green # Version: V1.4.3-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
 	echo -e "$ansi_green # configuration script in DD-WRT under$ansi_std. "
