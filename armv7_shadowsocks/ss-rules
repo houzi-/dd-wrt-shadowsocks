@@ -61,11 +61,12 @@ flush_r() {
 		-j REDIRECT --to-port $PORT 2>/dev/null
 	ipset -X gfw_black_list 2>/dev/null
 }
-	[ -f "/var/log/adbyby.lock" ] && {
+	[ -f "/opt/var/log/adbyby.lock" ] && {
 	$IPT -X ADBYBY_AC 2>/dev/null
 	$IPT -X ADBYBY_FW 2>/dev/null
 	ipset -X adbyby_lan_ac 2>/dev/null
 	ipset -X adbyby_wan_ac 2>/dev/null
+	ipset -X ADBYBY 2>/dev/null	
 	}
 	our_rule
 	return 0

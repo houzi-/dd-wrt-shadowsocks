@@ -105,8 +105,8 @@ case ${1} in
 			cp $SCRIPT_DIR/shadowsocks $PREFIX/shadowsocks
 			mount -o bind $PREFIX/opt /opt
 			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh
-			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/iptables* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* ipset* iptables*
+			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/iptables* ]; then
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* iptables*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin

@@ -62,4 +62,4 @@ adbyby_start() {
 	[ -f "/opt/var/log/adbyby.lock" ] && /opt/bin/shadowsocks -ad -A
 }
 
-[ -f /var/log/adbyby_global.lock ] && /opt/bin/adbyby_global_start || /opt/bin/adbyby_start
+[ -f /var/log/adbyby_global.lock ] && adbyby_global_start || adbyby_start
