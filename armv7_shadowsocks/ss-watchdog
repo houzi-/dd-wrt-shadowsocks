@@ -55,11 +55,11 @@ $START -s $server_ip -l $local_port -i $ignore_list -o -e "-m multiport --dports
 	-u
 
 adbyby_global_start() {
-	[ -f "/opt/var/log/adbyby.lock" ] && shadowsocks -ad -l $adbyby_lan_list_bp
+	[ -f "/opt/var/log/adbyby.lock" ] && /opt/bin/shadowsocks -ad -l $adbyby_lan_list_bp
 }
 
 adbyby_start() {
-	[ -f "/opt/var/log/adbyby.lock" ] && shadowsocks -ad -A
+	[ -f "/opt/var/log/adbyby.lock" ] && /opt/bin/shadowsocks -ad -A
 }
 
-[ -f /var/log/adbyby_global.lock ] && adbyby_global_start || adbyby_start
+[ -f /var/log/adbyby_global.lock ] && /opt/bin/adbyby_global_start || /opt/bin/adbyby_start

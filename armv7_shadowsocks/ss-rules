@@ -67,7 +67,6 @@ flush_r() {
 	ipset -X adbyby_lan_ac 2>/dev/null
 	ipset -X adbyby_wan_ac 2>/dev/null
 	}
-	restore_dnsamsq
 	our_rule
 	return 0
 }
@@ -110,12 +109,6 @@ fw_rule() {
 		exit 1
 	}
 	return $?
-}
-
-restore_dnsamsq() {
-	stopservice dnsmasq && \
-	/opt/etc/init.d/S56dnsmasq start
-	return $?	
 }
 
 ac_rule() {
