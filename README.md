@@ -11,3 +11,8 @@ Version: V1.5-beta
 # Usage wiki
 
 **[shadowsocks Scripting Guide](http://www.router008.com/2016/02/14/ShadowSocks-Scripting-Guide/)**
+
+# Support
+
+- NETGEAR:
+**R6300V2 R7000 R6700 AC1450 R6250**
