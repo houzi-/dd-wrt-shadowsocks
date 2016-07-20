@@ -86,7 +86,7 @@ china_domain_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/accelerat
 china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.china.conf"
 
 # alias of iptables
-IPT="/opt/sbin/iptables -t nat"
+IPT="/usr/iptables/iptables -t nat"
 
 case ${1} in
 
@@ -105,8 +105,8 @@ case ${1} in
 			cp $SCRIPT_DIR/shadowsocks $PREFIX/shadowsocks
 			mount -o bind $PREFIX/opt /opt
 			cd /opt && wget -O - $OPKG_SITE/$ARCH/installer/entware_install.sh | sh
-			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/iptables* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* iptables*
+			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/iptables* ]; then
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* ipset* iptables*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -131,7 +131,7 @@ case ${1} in
 		echo "/opt/bin/shadowsocks -S" >> $autorun
 		echo "sleep 1" >> $autorun
 		echo "/opt/bin/shadowsocks -r" >> $autorun
-		echo "stopservice cron && startservice cron" >> $autorun		
+		echo "stopservice cron && startservice cron" >> $autorun
 		echo >> $autorun
 
 		sleep 1
@@ -349,9 +349,7 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "#!/bin/sh\
-		\n\
-		\necho \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log" \
 		> /opt/bin/clear
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
@@ -437,9 +435,7 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "#!/bin/sh\
-		\n\
-		\necho \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log" \
 		> /opt/bin/clear
@@ -503,9 +499,7 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "#!/bin/sh\
-		\n\
-		\necho \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/dnscrypt-proxy_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> /opt/bin/clear
@@ -559,9 +553,7 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "#!/bin/sh\
-		\n\
-		\necho \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
 		> /opt/bin/clear
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
@@ -625,9 +617,7 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "#!/bin/sh\
-		\n\
-		\necho \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> /opt/bin/clear
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
@@ -670,19 +660,19 @@ uptest= none;
 			startservice dnsmasq
 
 	check_dns() {
-		old_dns=`cat /opt/etc/init.d/S24chinadns | sed -n "5p" | awk '/^.*/{print $6}' | sed -e 's/,127.*//' -e 's/,.*//'`
+		old_dns=`cat $PREFIX/opt/etc/init.d/S24chinadns | sed -n "5p" | awk '/^.*/{print $6}' | sed -e 's/,127.*//' -e 's/,.*//'`
 		new_dns=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
 		if [ "$old_dns" == "$new_dns" ]; then
 			echo "DNS is same!" > /var/log/check_dns.log
 		else
 			if [ -n "`nvram get wan_get_dns | sed 's/ .*//'`" ]; then
 				CHINADNS=`nvram get wan_get_dns | sed 's/ .*//'`
-				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
-				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $CHECK/dnsmasq.d/accelerated-domains.china.conf
+				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $PREFIX/$CHECK/init.d/S24chinadns
+				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/$CHECK/dnsmasq.d/accelerated-domains.china.conf
 			else
 				CHINADNS=`cat /tmp/resolv.dnsmasq | awk '/^nameserver/{print $2}' | sed -n '1p'`
-				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $CHECK/init.d/S24chinadns
-				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $CHECK/dnsmasq.d/accelerated-domains.china.conf
+				sed -i "s/^ARGS=\(.*\)$old_dns\(.*\)$/ARGS=\1$CHINADNS\2/" $PREFIX/$CHECK/init.d/S24chinadns
+				sed -i "s|^\(server.*\)/[^/]*$|\1/$new_dns|" $PREFIX/$CHECK/dnsmasq.d/accelerated-domains.china.conf
 			fi
 		fi
 	}
@@ -1070,13 +1060,13 @@ uptest= none;
 	fi
 
 	if [ -f "/var/log/chnroutes.lock" ]; then
-		if [ "`/opt/sbin/iptables -t nat -nvL | grep "SS_SPEC_WAN_AC" | wc -l`" -eq 3 ]; then
+		if [ "`$IPT -t nat -nvL | grep "SS_SPEC_WAN_AC" | wc -l`" -eq 3 ]; then
 			:
 		else
 			/opt/bin/shadowsocks -r
 		fi
 	else
-		if [ "`/opt/sbin/iptables -t nat -nvL | grep "gfw_black_list" | wc -l`" -eq 2 ]; then
+		if [ "`$IPT -nvL | grep "gfw_black_list" | wc -l`" -eq 2 ]; then
 			:
 		else
 			/opt/bin/shadowsocks -r
@@ -1391,7 +1381,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.7.13 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.7.20 $ansi_std"
 	echo -e "$ansi_green # Version: V1.5-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
