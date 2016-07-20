@@ -167,7 +167,7 @@ case ${1} in
 
 	BIN=/opt/bin
 	SBIN=/opt/sbin
-	echo -e "chinadns \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir" > /var/log/find.txt
+	echo -e "chinadns \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nss-redir" > /var/log/find.txt
 	cd $BIN
 	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then
 		ls -1 chinadns Pcap_DNSProxy ss-redir pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
@@ -190,7 +190,7 @@ case ${1} in
 			echo -e "$ansi_red ERROR. $ansi_std"
 			echo -e "$WARNING \n$BOLD Please install the following software:"$NORM
 			rm -rf $PREFIX/opt
-			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \nresolvip \ndiffutils \ndnscrypt-proxy"$ansi_std
+			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \ndiffutils \ndnscrypt-proxy"$ansi_std
 			exit 0
 		else
 			echo -e $DEPENDENCE
