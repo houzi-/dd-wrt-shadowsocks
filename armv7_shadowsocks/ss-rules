@@ -10,8 +10,8 @@
 #debug
 #set -x
 
-IPT="/opt/sbin/iptables -t nat"
-IPT_M="/opt/sbin/iptables -t mangle"
+IPT="/usr/iptables/iptables -t nat"
+IPT_M="/usr/iptables/iptables -t mangle"
 IPTS="/usr/sbin/iptables-restore"
 
 usage() {
