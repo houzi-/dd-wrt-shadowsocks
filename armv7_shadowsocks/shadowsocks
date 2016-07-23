@@ -40,7 +40,7 @@ adbyby_filter_global=0
 adbyby_dns="http://entware.mirrors.ligux.com/adbyby_dns/adbyby_dns"
 
 # Check DNS
-check_dns=1
+check_dns=0
 
 READ="\033[31;1m"
 BOLD="\033[42;1m"
@@ -106,8 +106,8 @@ case ${1} in
 			cp $SCRIPT_DIR/shadowsocks $PREFIX/shadowsocks
 			mount -o bind $PREFIX/opt /opt
 			/opt/bin/opkg update
-			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* -a -e $SCRIPT_DIR/ipset* -a -e $SCRIPT_DIR/iptables* ]; then
-				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry* ipset* iptables*
+			if [ -e $SCRIPT_DIR/chinadns* -a -e $SCRIPT_DIR/diff* -a -e $SCRIPT_DIR/pcap-dns* -a -e $SCRIPT_DIR/pdns* -a -e $SCRIPT_DIR/shadowsocks-libe* -a -e $SCRIPT_DIR/dnscryp* ]; then
+				cd $SCRIPT_DIR && opkg install --force-checksum china* pdnsd* pcap* shadowsocks-libe* diff* dnscry*
 				echo -e "$ansi_green SHADOWSOCKS script installed successfully! $ansi_std"
 				sleep 5
 				ln -s $PREFIX/shadowsocks/shadowsocks /opt/bin
@@ -168,7 +168,7 @@ case ${1} in
 
 	BIN=/opt/bin
 	SBIN=/opt/sbin
-	echo -e "chinadns \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nresolvip \nss-redir" > /var/log/find.txt
+	echo -e "chinadns \ndiff \ndnscrypt-proxy \nPcap_DNSProxy \npdnsd-ctl \nss-redir" > /var/log/find.txt
 	cd $BIN
 	if [ ! -f chinadns -o ! -f Pcap_DNSProxy -o ! -f ss-redir -o ! -f pdnsd-ctl -o ! -f diff -o ! -f dnscrypt-proxy ]; then
 		ls -1 chinadns Pcap_DNSProxy ss-redir pdnsd-ctl diff dnscrypt-proxy > /var/log/find_N.txt
@@ -191,7 +191,7 @@ case ${1} in
 			echo -e "$ansi_red ERROR. $ansi_std"
 			echo -e "$WARNING \n$BOLD Please install the following software:"$NORM
 			rm -rf $PREFIX/opt
-			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \nresolvip \ndiffutils \ndnscrypt-proxy"$ansi_std
+			echo -e $ansi_white"shadowsocks-libev \nchinadns \npdnsd \npcap-dnsproxy \ndiffutils \ndnscrypt-proxy"$ansi_std
 			exit 0
 		else
 			echo -e $DEPENDENCE
