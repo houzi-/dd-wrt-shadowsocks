@@ -145,7 +145,7 @@ tp_rule() {
 	[ -n "$TPROXY" ] || return 0
 	ip rule add fwmark 0x01/0x01 table 100
 	ip route add local 0.0.0.0/0 dev lo table 100
-	local ipt="/opt/sbin/iptables -t mangle"
+	local ipt="/usr/iptables/iptables -t mangle"
 	$ipt -N SS_SPEC_TPROXY
 	$ipt -A SS_SPEC_TPROXY -p udp -m set ! --match-set ss_spec_wan_ac dst \
 		-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
