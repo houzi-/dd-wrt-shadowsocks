@@ -101,8 +101,17 @@ case ${1} in
 	else
 		if [ ! -d "$PREFIX/shadowsocks" ]; then
 			echo -e $INFO "Creating in..."
-			cd $PREFIX;wget $OPKG_SITE/$ARCH/backup/entware_backup.tar.gz && tar -zxvf entware_backup.tar.gz
+			entware() {
+				cd $PREFIX;wget -t0 $OPKG_SITE/$ARCH/backup/entware_backup.tar.gz && tar -zxvf entware_backup.tar.gz
+				if [ ! -f $PREFIX/entware_backup.tar.gz ]; then
+					echo "$ansi_red entware-ng installation failed $ansi_std"
+					exit 0
+				fi
+				[ -f $PREFIX/entware_backup.tar.gz ] && rm -rf $PREFIX/entware_backup.tar.gz
+			}
+			entware
 			cd /tmp/root
+			mkdir -p $PREFIX/shadowsocks
 			cp $SCRIPT_DIR/shadowsocks $PREFIX/shadowsocks
 			mount -o bind $PREFIX/opt /opt
 			/opt/bin/opkg update
@@ -356,6 +365,8 @@ uptest= none;
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
 		chmod -R 755 /opt/bin/clear
 		nvram commit
+		stopservice dnsmasq && \
+			startservice dnsmasq			
 
 		$PREFIX/shadowsocks/shadowsocks -b
 		echo -e "$ansi_red Set successfully, please reboot the router. Found a Bug? Plea se report at https://github.com/houzi-/dd-wrt-shadowsocks/issues. $ansi_std"
@@ -423,6 +434,8 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set dnsmasq_options="$DNS_CUSTOM"
+		stopservice dnsmasq && \
+			startservice dnsmasq
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -487,6 +500,8 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set dnsmasq_options="$DNS_CUSTOM"
+		stopservice dnsmasq && \
+			startservice dnsmasq
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -541,6 +556,8 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set dnsmasq_options="$DNS_CUSTOM"
+		stopservice dnsmasq && \
+			startservice dnsmasq
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -605,6 +622,8 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set dnsmasq_options="$DNS_CUSTOM"
+		stopservice dnsmasq && \
+			startservice dnsmasq
 
 		echo -e $INFO Configuring turn startup items and guard the capital...
 		echo -e "$PREFIX/opt/etc/init.d/auto.run" > /var/log/scr_c.txt
@@ -1382,7 +1401,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.7.23 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.7.26 $ansi_std"
 	echo -e "$ansi_green # Version: V1.5-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
