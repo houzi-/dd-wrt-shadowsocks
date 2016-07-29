@@ -102,11 +102,14 @@ case ${1} in
 		if [ ! -d "$PREFIX/shadowsocks" ]; then
 			echo -e $INFO "Creating in..."
 			entware() {
-				cd $PREFIX;wget -t0 $OPKG_SITE/$ARCH/backup/entware_backup.tar.gz && tar -zxvf entware_backup.tar.gz
-				if [ ! -f $PREFIX/entware_backup.tar.gz ]; then
+				cd $PREFIX;wget -t0 $OPKG_SITE/$ARCH/backup/entware_backup.tar.gz
+				sha1sum_entware="ffc285b0c4ded845c499508b365394ed77b682c1"
+				checksum=`sha1sum $PREFIX/entware_backup.tar.gz | sed "s/  .*//"`
+				if [ ! "$sha1sum_entware" == "$checksum" ]; then
 					echo "$ansi_red entware-ng installation failed $ansi_std"
 					exit 0
 				fi
+				tar -zxvf entware_backup.tar.gz
 				[ -f $PREFIX/entware_backup.tar.gz ] && rm -rf $PREFIX/entware_backup.tar.gz
 			}
 			entware
@@ -1401,7 +1404,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.7.26 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.7.29 $ansi_std"
 	echo -e "$ansi_green # Version: V1.5-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
