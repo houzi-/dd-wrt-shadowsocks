@@ -1276,11 +1276,27 @@ uptest= none;
 			if [ "${choice}" == "y" ]; then
 				/opt/etc/init.d/rc.unslung ${2}
 				if [ "${2}" == "stop" ]; then
-					cp $CHECK/dnsmasq.conf $CHECK/dnsmasq.conf.bak
-					cp /tmp/etc/dnsmasq.conf $CHECK/dnsmasq.conf
-					$PREFIX/shadowsocks/shadowsocks -f
-					killall dnsmasq && \
-						/opt/etc/init.d/S56dnsmasq restart
+					cron_clear() {
+						if [ ! -f /opt/etc/cron_jobs.bak ]; then
+							nvram get cron_jobs > /opt/etc/cron_jobs.bak
+						fi
+						nvram set cron_jobs=""
+						nvram commit
+						stopservice cron && startservice cron
+					}
+
+					dnsmasq_clear() {
+						if [ ! -f /opt/etc/dnsmasq_options.bak ]; then
+							nvram get dnsmasq_options > /opt/etc/dnsmasq_options.bak
+						fi
+						nvram set dnsmasq_options=""
+						nvram commit
+						stopservice dnsmasq && startservice dnsmasq
+					}
+
+					cron_clear
+					dnsmasq_clear
+					$PREFIX/shadowsocks/shadowsocks -f				
 				fi
 			else
 				: ${warning:?"You do not have any operations."}
@@ -1292,12 +1308,33 @@ uptest= none;
 			read choice
 			if [ "${choice}" == "y" ]; then
 				if [ "${2}" == "start" ]; then
-					cp $CHECK/dnsmasq.conf.bak $CHECK/dnsmasq.conf
+					cron_restore() {
+						if [ -f /opt/etc/cron_jobs.bak ]; then
+							CRON=`cat /opt/etc/cron_jobs.bak | sed -e 's/[\t]*//g' | sed -e ''`
+							nvram set cron_jobs="$CRON"
+							nvram commit
+							stopservice cron && startservice cron
+						else
+							return 0
+						fi	
+					}
+
+					dnsmasq_restore() {
+						if [ -f /opt/etc/cron_jobs.bak ]; then						
+							DNS_CUSTOM=`cat /opt/etc/dnsmasq_options.bak | sed -e 's/[\t]*//g' | sed -e ''`
+							nvram set dnsmasq_options="$DNS_CUSTOM"
+							nvram commit
+							stopservice dnsmasq && startservice dnsmasq
+						else
+							return 0
+						fi						
+					}
+
+					cron_restore
+					dnsmasq_restore
 					$PREFIX/shadowsocks/shadowsocks -f && \
 					$PREFIX/shadowsocks/shadowsocks -S && \
 					$PREFIX/shadowsocks/shadowsocks -r
-					stopservice dnsmasq && \
-						startservice dnsmasq
 				fi
 			else
 				: ${warning:?"You do not have any operations."}
@@ -1380,7 +1417,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.8.2 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.8.3 $ansi_std"
 	echo -e "$ansi_green # Version: V1.5-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
