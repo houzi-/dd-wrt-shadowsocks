@@ -7,6 +7,7 @@
 # See /LICENSE for more information.
 #
 
+# debug
 #set -x
 
 if [ ! -d "/opt/etc/shadowsocks" ]; then
@@ -17,7 +18,6 @@ if [ ! -d "/opt/etc/shadowsocks" ]; then
 	mkdir -p /opt/etc/shadowsocks/LAN_AC_FW && \
 	mkdir -p /opt/etc/shadowsocks/LAN_AC_BP
 fi
-[ ! -d "/opt/etc/adbyby" ] && mkdir -p /opt/etc/adbyby
 
 server_ip=`sed -n 's/.*ver": *"\(.*\)".*/\1/p' /opt/etc/shadowsocks.json`
 local_port=`sed -n 's/.*l_port": *\(.*\)/\1/p' /opt/etc/shadowsocks.json | sed 's/,//g'`
@@ -28,7 +28,6 @@ wan_ac_list_bp=/opt/etc/shadowsocks/WAN_AC_BP/wan_ac.list
 lan_ac_list_no=/opt/etc/shadowsocks/LAN_AC_NO/lan_ac.list
 lan_ac_list_fw=/opt/etc/shadowsocks/LAN_AC_FW/lan_ac.list
 lan_ac_list_bp=/opt/etc/shadowsocks/LAN_AC_BP/lan_ac.list
-adbyby_lan_list_bp=/opt/etc/adbyby/lan_bp.list
 
 [ ! -f "$wan_ac_list_fw" -o ! -f "$wan_ac_list_bp" ] && \
 touch a $wan_ac_list_sp && \
@@ -39,9 +38,6 @@ touch a $wan_ac_list_bp
 touch a $lan_ac_list_no && \
 touch a $lan_ac_list_fw && \
 touch a $lan_ac_list_bp
-
-[ ! -f "$adbyby_lan_list_bp" ] && \
-touch a $adbyby_lan_list_bp
 
 WAN_AC_NO=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_sp | xargs`
 WAN_AC_FW=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $wan_ac_list_fw | xargs`
@@ -54,17 +50,9 @@ LAN_AC_BP=`sort -t'.' -nk1,1 -nk2,3 -nk3,3 -nk4,4 $lan_ac_list_bp | xargs`
 PROCS=ss-nat
 BIN=/opt/bin
 START=$BIN/$PROCS
+IFNAME=`nvram get lan_ifname`
 	
 $START -s $server_ip -l $local_port -i $ignore_list -o -e "-m multiport --dports 22,80,443" \
 	-d SS_SPEC_WAN_AC \
+	-I $IFNAME \
 	-u
-
-adbyby_global_start() {
-	[ -f "/opt/var/log/adbyby.lock" ] && /opt/bin/shadowsocks -ad -l $adbyby_lan_list_bp
-}
-
-adbyby_start() {
-	[ -f "/opt/var/log/adbyby.lock" ] && /opt/bin/shadowsocks -ad -A
-}
-
-[ -f /var/log/adbyby_global.lock ] && adbyby_global_start || adbyby_start

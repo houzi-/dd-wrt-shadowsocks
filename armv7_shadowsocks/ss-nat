@@ -7,7 +7,7 @@
 # See /LICENSE for more information.
 #
 
-#debug
+# debug
 #set -x
 
 IPT="/usr/iptables/iptables -t nat"
@@ -69,13 +69,6 @@ flush_r() {
 		-j REDIRECT --to-port $PORT 2>/dev/null
 	ipset -X gfw_black_list 2>/dev/null
 }
-	[ -f "/opt/var/log/adbyby.lock" ] && {
-	$IPT -X ADBYBY_AC 2>/dev/null
-	$IPT -X ADBYBY_FW 2>/dev/null
-	ipset -X adbyby_lan_ac 2>/dev/null
-	ipset -X adbyby_wan_ac 2>/dev/null
-	ipset -X ADBYBY 2>/dev/null	
-	}
 	our_rule
 	return 0
 }
@@ -182,7 +175,6 @@ gen_prerouting_rules() {
 		return 0
 	fi
 	for ifname in $IFNAMES; do
-		ifname=$(nvram get lan_ifname 2>/dev/null)
 		[ -z "$ifname" ] && continue
 		echo -I PREROUTING 1 -i $ifname -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
 	done
