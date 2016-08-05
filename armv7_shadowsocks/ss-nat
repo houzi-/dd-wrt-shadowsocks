@@ -8,7 +8,7 @@
 #
 
 # debug
-set -x
+#set -x
 
 IPT="/usr/iptables/iptables -t nat"
 IPT_M="/usr/iptables/iptables -t mangle"
