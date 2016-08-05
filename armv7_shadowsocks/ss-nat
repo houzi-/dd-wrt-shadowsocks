@@ -8,7 +8,7 @@
 #
 
 # debug
-#set -x
+set -x
 
 IPT="/usr/iptables/iptables -t nat"
 IPT_M="/usr/iptables/iptables -t mangle"
@@ -166,18 +166,15 @@ EOF
 }
 
 gen_prerouting_rules() {
-	local protocol=tcp
-	if [ "$1" = "mangle" ]; then
-		protocol=udp
-	fi
-	if [ -z "$IFNAMES" ]; then
-		echo -I PREROUTING 1 -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
-		return 0
-	fi
+	local protocol=$([ "$1" = "mangle" ] && echo udp || echo tcp)
 	for ifname in $IFNAMES; do
 		[ -z "$ifname" ] && continue
+		local empty=no
 		echo -I PREROUTING 1 -i $ifname -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
 	done
+	if [ -z "$empty" ]; then
+		echo -I PREROUTING 1 -p $protocol $EXT_ARGS -j SS_SPEC_LAN_AC
+	fi
 }
 
 include_prerouting_rules() {
