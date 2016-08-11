@@ -78,6 +78,9 @@ china_routing_list="http://entware.mirrors.ligux.com/apnic/delegated-apnic-lates
 china_domain_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/accelerated-domains.china.conf"
 china_google_list="http://entware.mirrors.ligux.com/dnsmasq-china-list/google.china.conf"
 
+# alias of iptables
+IPT="/usr/iptables/iptables -t nat"
+
 case ${1} in
 
 -su | --set_up)
@@ -352,7 +355,9 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "#!/bin/sh\
+		\n\
+		\necho \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log" \
 		> /opt/bin/clear
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
@@ -442,7 +447,9 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "#!/bin/sh\
+		\n\
+		\necho \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log\
 		\necho \"\" > /var/log/pdnsd_watchdog.log" \
 		> /opt/bin/clear
@@ -508,7 +515,9 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "#!/bin/sh\
+		\n\
+		\necho \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/dnscrypt-proxy_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> /opt/bin/clear
@@ -564,7 +573,9 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "#!/bin/sh\
+		\n\
+		\necho \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/Pcap_DNSProxy_watchdog.log" \
 		> /opt/bin/clear
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
@@ -630,7 +641,9 @@ uptest= none;
 		sed -e 's/[\t]*//g' | \
 		sed -e ''`
 		nvram set cron_jobs="$CRON"
-		echo -e "echo \"\" > /var/log/shadowsocks_watchdog.log\
+		echo -e "#!/bin/sh\
+		\n\
+		\necho \"\" > /var/log/shadowsocks_watchdog.log\
 		\necho \"\" > /var/log/chinadns_watchdog.log" \
 		> /opt/bin/clear
 		sed -i 's/[\t]*//g' /opt/bin/clear && \
@@ -697,16 +710,6 @@ uptest= none;
 		:
 	fi
 
-	if [ "$adbyby_filter" == "1" ]; then
-		touch /var/log/adbyby.lock
-		touch /opt/var/log/adbyby.lock
-	else
-		if [ "$adbyby_filter_global" == "1" ]; then
-		touch /var/log/adbyby_global.lock
-		touch /opt/var/log/adbyby.lock
-		fi
-	fi
-
 	[ "$check_dns" == "1" ] && check_dns
 
 	PROCESS=$(ps | grep "ss-redir" | grep -v "grep")
@@ -751,10 +754,12 @@ uptest= none;
 			read choice
 			if [ "${choice}" == "y" ]; then
 				touch $CHECK/global.list
-				sed -i 's/\$ignore_list/$global_list/' /opt/bin/ss-watchdog
+				sed -i 's/\SS_SPEC_WAN_AC/SS_SPEC_WAN_FW/' /opt/bin/ss-start
 				echo -e -n "$ansi_white ${2} Global... "
 				sleep 1
 				echo -e "            $ansi_green done. $ansi_std"
+				$PREFIX/shadowsocks/shadowsocks -f
+				$PREFIX/shadowsocks/shadowsocks -r
 			else
 				: ${warning:?"You do not have any operations."}
 			fi
@@ -765,18 +770,17 @@ uptest= none;
 			read choice
 			if [ "${choice}" == "y" ]; then
 				touch $CHECK/global.list
-				sed -i 's/\$global_list/$ignore_list/' /opt/bin/ss-watchdog
+				sed -i 's/\SS_SPEC_WAN_FW/SS_SPEC_WAN_AC/' /opt/bin/ss-start
 				echo -e -n "$ansi_white ${2} Global... "
 				sleep 1
 				echo -e "            $ansi_green done. $ansi_std"
+				$PREFIX/shadowsocks/shadowsocks -f
+				$PREFIX/shadowsocks/shadowsocks -r
 			else
 				: ${warning:?"You do not have any operations."}
 			fi
 		;;
 		esac
-
-	$PREFIX/shadowsocks/shadowsocks -f
-	$PREFIX/shadowsocks/shadowsocks -r
 	;;
 
 -f | --flush)
@@ -1198,47 +1202,6 @@ uptest= none;
 	esac
 	;;
 
--us | --update_scr)
-	yes_or_no() {
-    		read -p "$1 ([y]es or [n]o): "
-    		case $(echo $REPLY | tr '[A-Z]' '[a-z]') in
-        		y|yes) echo "yes" ;;
-        		*)     echo "no" ;;
-    		esac
-	}
-
-	SCRIPT_INSTALL=$(cd ${SCRIPT_DIR} && cd .. && pwd)
-
-	if [ ! "$SCRIPT_DIR" == "$PREFIX" ]; then
-		sed -i 's;PREFIX='"$PREFIX"';PREFIX='"$SCRIPT_INSTALL"';' $SCRIPT_DIR/shadowsocks
-	fi
-
-	echo -e $INFO Choose $BOLD CHNROUTES or GFWLIST $NORM? "\033[4m yes \033[0m"  or "\033[4m no \033[0m"
-	if [ "yes" == $(yes_or_no "CHNROUTES?") ]; then
-		if [ "yes" == $(yes_or_no "ss-redir?") ]; then
-			echo -e $INFO Is updating the script......
-			if [ -f "/var/log/pcap_dnsproxy.lock" ]; then
-				sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S27pcap-dnsproxy (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-			else
-				sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-				[ -f "/var/log/pdnsd.lock" ] && sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-				[ -f "/var/log/dnscrypt-proxy.lock" ] && sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S29dnscrypt-proxy (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-			fi
-		else
-			echo -e $INFO Is updating the script......
-			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S23ss-tunnel (start|restart))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-			sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S24chinadns (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-		fi
-	else
-		echo -e $INFO Is updating the script......
-		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $SCRIPT_INSTALL/shadowsocks/shadowsocks -i $SCRIPT_INSTALL/shadowsocks/shadowsocks
-	fi
-
-	echo -e -n $update_scr
-	sleep 1
-	echo -e "$ansi_green PASS. $ansi_std"
-	;;
-
 -b | --backup)
 	echo -e "$ansi_white You want to backup entware?(y/N)$ansi_std"
 	read choice
@@ -1269,7 +1232,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.8.4 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.8.11 $ansi_std"
 	echo -e "$ansi_green # Version: V1.5-stable (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
@@ -1290,7 +1253,6 @@ uptest= none;
 	echo -e "$ansi_white   [-c/--check] Guardian ss-redir* $ansi_std"
 	echo -e "$ansi_white   [-sw/--ss_switch] Account switching $ansi_std"
 	echo -e "$ansi_white   [-sa/--services_action] Change all state services $ansi_std"
-	echo -e "$ansi_white   [-us/--update_scr] Update script $ansi_std"
 	echo -e "$ansi_white   [-b/--backup] Backup entware $ansi_std"
 	echo -e "$ansi_white   [-e/--email] Send shadowsocks running information $ansi_std"
 	echo -e "$ansi_white   [-h/--help] Script help $ansi_std"
