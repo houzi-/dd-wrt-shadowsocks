@@ -19,4 +19,4 @@ Version: V1.5-beta
 
 # NOTE
 
-**Script applications: These scripts are only applied to those [Firmware](http://entware.mirrors.ligux.com/DD-WRT/K3-AC-ARM/R29846/)**
+**Script applications: These scripts are only apply to those [Firmware](http://entware.mirrors.ligux.com/DD-WRT/K3-AC-ARM/R29846/)**
