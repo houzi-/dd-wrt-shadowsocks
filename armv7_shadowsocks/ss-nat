@@ -52,14 +52,9 @@ flush_r() {
 	$IPT_M -X SS_SPEC_TPROXY 2>/dev/null	
 	ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
-	ipset -X ss_spec_lan_ac 2>/dev/null
-	ipset -X ss_spec_wan_ac 2>/dev/null
-	ipset -X ss_spec_lan_no 2>/dev/null
-	ipset -X ss_spec_lan_bp 2>/dev/null
-	ipset -X ss_spec_lan_fw 2>/dev/null
-	ipset -X ss_spec_wan_sp 2>/dev/null
-	ipset -X ss_spec_wan_bp 2>/dev/null
-	ipset -X ss_spec_wan_fw 2>/dev/null
+	for setname in $(ipset -n list | grep -i "$TAG"); do
+		ipset destroy $setname 2>/dev/null
+	done
 	[ -f "/var/log/gfwlist.lock" ] && {
 	local JSON="/opt/etc/shadowsocks.json"
 	local PORT=`sed -n 's/.*l_port":\(.*\)/\1/p' $JSON | sed 's/,//g'`
@@ -91,7 +86,7 @@ our_rule() {
 }
 
 ipset_r() {
-	ipset -! -R <<-EOF || return 1
+	ipset -! restore <<-EOF || return 1
 		create ss_spec_lan_no hash:net hashsize 64
 		create ss_spec_lan_bp hash:net hashsize 64
 		create ss_spec_lan_fw hash:net hashsize 64
