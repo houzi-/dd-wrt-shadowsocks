@@ -16,3 +16,7 @@ Version: V1.5-beta
 
 - NETGEAR:
 **R6300V2 R7000 R6700 AC1450 R6250**
+
+# NOTE
+
+**Script applications: These scripts are only applied to those [Firmware](http://entware.mirrors.ligux.com/DD-WRT/K3-AC-ARM/R29846/)**
