@@ -33,7 +33,6 @@ usage() {
 		    -e <extra_options>      extra options for iptables
 		    -o                      apply the rules to the OUTPUT chain
 		    -u                      enable udprelay mode, TPROXY is required
-		    -G                      enable GFWLIST
 		    -f                      flush the rules
 		    -h                      show this help message and exit
 EOF
@@ -56,31 +55,8 @@ flush_r() {
 	for setname in $(ipset -n list | grep -i "$TAG"); do
 		ipset destroy $setname 2>/dev/null
 	done
-	[ -f "/var/log/gfwlist.lock" ] && {
-	local JSON="/opt/etc/shadowsocks.json"
-	local PORT=`sed -n 's/.*l_port":\(.*\)/\1/p' $JSON | sed 's/,//g'`
-	$IPT -D PREROUTING -p tcp -m set --match-set gfw_black_list dst \
-		-j REDIRECT --to-port $PORT 2>/dev/null
-	$IPT -D OUTPUT -p tcp -m set --match-set gfw_black_list dst \
-		-j REDIRECT --to-port $PORT 2>/dev/null
-	ipset -X gfw_black_list 2>/dev/null
-}
 	our_rule
 	return 0
-}
-
-gfw_r() {
-	if [ "$GFWLIST" = 1 ]; then
-		ipset -N gfw_black_list hash:ip hashsize 64
-		local JSON="/opt/etc/shadowsocks.json"
-		local PORT=`sed -n 's/.*l_port": \(.*\)/\1/p' $JSON | sed 's/,//g'`
-		$IPT -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
-			-j REDIRECT --to-port $PORT
-		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
-			-j REDIRECT --to-port $PORT
-		touch a /var/log/gfwlist.lock
-	fi
-	return $?	
 }
 
 our_rule() {
@@ -204,7 +180,7 @@ gen_iplist() {
 EOF
 }
 
-while getopts ":s:l:i:b:w:I:d:a:e:ouGfh" arg; do
+while getopts ":s:l:i:b:w:I:d:a:e:oufh" arg; do
 	case "$arg" in
 		s)
 			server=$OPTARG
@@ -238,9 +214,6 @@ while getopts ":s:l:i:b:w:I:d:a:e:ouGfh" arg; do
 			;;
 		u)
 			TPROXY=1
-			;;
-		G)
-			GFWLIST=1
 			;;			
 		f)
 			flush_r
@@ -252,12 +225,8 @@ while getopts ":s:l:i:b:w:I:d:a:e:ouGfh" arg; do
 	esac
 done
 
-if [ "$GFWLIST" = 1 ]; then
-	:	
-else
-	if [ -z "$server" -o -z "$local_port" ]; then
-		usage 2
-	fi
+if [ -z "$server" -o -z "$local_port" ]; then
+	usage 2
 fi
 
 if [ "$TPROXY" = 1 ]; then
@@ -265,16 +234,7 @@ if [ "$TPROXY" = 1 ]; then
 	LOCAL_PORT=$local_port
 fi
 
-if [ "$GFWLIST" = 1 ]; then
-	flush_r && gfw_r
-	RET=$?	
-	[ "$?" = 0 ] && loger 6 "Load gfwlist successful" || loger 3 "Start failed!"
-	touch /var/log/gfwlist.lock
-	exit $RET
-else
-	flush_r && ipset_r && ac_rule && tp_rule
-	RET=$?
-	[ "$?" = 0 ] && loger 6 "Load chnroutes successful" || loger 3 "Start failed!"
-	touch /var/log/chnroutes.lock
-	exit $RET
-fi
+flush_r && ipset_r && ac_rule && tp_rule
+RET=$?
+[ "$?" = 0 ] && loger 3 "Load chnroutes successful" || loger 3 "Start failed!"
+exit $RET
