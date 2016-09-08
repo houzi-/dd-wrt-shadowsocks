@@ -13,6 +13,7 @@
 IPT="/usr/iptables/iptables -t nat"
 IPT_M="/usr/iptables/iptables -t mangle"
 IPTS="/usr/sbin/iptables-restore"
+TAG="ss_spec"
 
 usage() {
 	cat <<-EOF
@@ -72,13 +73,14 @@ gfw_r() {
 	if [ "$GFWLIST" = 1 ]; then
 		ipset -N gfw_black_list hash:ip hashsize 64
 		local JSON="/opt/etc/shadowsocks.json"
-		local PORT=`sed -n 's/.*l_port":\(.*\)/\1/p' $JSON | sed 's/,//g'`
+		local PORT=`sed -n 's/.*l_port": \(.*\)/\1/p' $JSON | sed 's/,//g'`
 		$IPT -A PREROUTING -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port $PORT
 		$IPT -A OUTPUT -p tcp -m set --match-set gfw_black_list dst \
 			-j REDIRECT --to-port $PORT
 		touch a /var/log/gfwlist.lock
 	fi
+	return $?	
 }
 
 our_rule() {
