@@ -43,8 +43,20 @@ PROCS=ss-nat
 BIN=/opt/bin
 START=$BIN/$PROCS
 IFNAME=`nvram get lan_ifname`
-	
+
+chnroutes() {
 $START -s $server_ip -l $local_port -i $ignore_list -o -e "-m multiport --dports 22,80,443" \
 	-d SS_SPEC_WAN_AC \
 	-I $IFNAME \
 	-u
+}
+
+gfwlist() {
+$START -s $server_ip -l $local_port -i /dev/null -o -e "-m multiport --dports 22,80,443" \
+	-d SS_SPEC_WAN_AC \
+	-I $IFNAME \
+	-b "0.0.0.0/1 128.0.0.0/1" \
+	-u
+}
+
+[ -f /var/log/chnroutes.lock ] && chnroutes || gfwlist
