@@ -59,4 +59,5 @@ $START -s $server_ip -l $local_port -i /dev/null -o -e "-m multiport --dports 22
 	-u
 }
 
-[ -f /var/log/chnroutes.lock ] && chnroutes || gfwlist
+[ -f /var/log/chnroutes.lock ] && chnroutes || continue
+[ -f /var/log/gfwlist.lock ] && gfwlist || exit 0
