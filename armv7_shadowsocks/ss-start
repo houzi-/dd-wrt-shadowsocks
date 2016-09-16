@@ -48,7 +48,12 @@ chnroutes() {
 $START -s $server_ip -l $local_port -i $ignore_list -o -e "-m multiport --dports 22,80,443" \
 	-d SS_SPEC_WAN_AC \
 	-I $IFNAME \
+	-b "$WAN_AC_BP" \
+	-w "$WAN_AC_FW" \
+	-a "b,$LAN_AC_BP" \
 	-u
+
+exit 0
 }
 
 gfwlist() {
@@ -57,7 +62,9 @@ $START -s $server_ip -l $local_port -i /dev/null -o -e "-m multiport --dports 22
 	-I $IFNAME \
 	-b "0.0.0.0/1 128.0.0.0/1" \
 	-u
+
+exit 0
 }
 
-[ -f /var/log/chnroutes.lock ] && chnroutes || continue
+[ -f /var/log/chnroutes.lock ] && chnroutes
 [ -f /var/log/gfwlist.lock ] && gfwlist || exit 0
