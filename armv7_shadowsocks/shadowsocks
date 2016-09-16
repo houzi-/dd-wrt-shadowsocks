@@ -303,7 +303,6 @@ Your Choice:"
 		sed -n 's/.*ver":"\(.*\)".*/\1/p' $CHECK/shadowsocks.json  > $PREFIX/opt/var/log/server.txt
 
 		sed -r 's/#(['$'\t'' ]*\/opt\/etc\/init.d\/S26pdnsd (start))/\1/' $PREFIX/shadowsocks/shadowsocks -i $PREFIX/shadowsocks/shadowsocks
-		sed -i 's/PROCS=ss-start/PROCS=ss-nat/;s/^ARGS=""/ARGS="-G"/' $CHECK/init.d/S99ss-rules 
 
 		rm -f $CHECK/pdnsd.conf
 		cat > $CHECK/pdnsd.conf <<-end
@@ -333,6 +332,7 @@ uptest= none;
 		$PREFIX/shadowsocks/shadowsocks -S
 		$PREFIX/shadowsocks/shadowsocks -ug
 		sleep 1
+		touch /opt/var/log/gfwlist.lock		
 		$PREFIX/shadowsocks/shadowsocks -r
 
 		nvram set time_zone="Asia/Shanghai"
@@ -420,6 +420,7 @@ uptest= none;
 		sleep 4
 		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
+		touch /opt/var/log/chnroutes.lock		
 		$PREFIX/shadowsocks/shadowsocks -r
 
 		nvram set time_zone="Asia/Shanghai"
@@ -488,6 +489,7 @@ uptest= none;
 		sleep 4
 		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
+		touch /opt/var/log/chnroutes.lock		
 		$PREFIX/shadowsocks/shadowsocks -r
 
 		nvram set time_zone="Asia/Shanghai"
@@ -546,6 +548,7 @@ uptest= none;
 		sleep 4
 		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
+		touch /opt/var/log/chnroutes.lock		
 		$PREFIX/shadowsocks/shadowsocks -r
 
 		nvram set time_zone="Asia/Shanghai"
@@ -614,6 +617,7 @@ uptest= none;
 		sleep 4
 		$PREFIX/shadowsocks/shadowsocks -S
 		sleep 2
+		touch /opt/var/log/chnroutes.lock		
 		$PREFIX/shadowsocks/shadowsocks -r
 
 		nvram set time_zone="Asia/Shanghai"
@@ -1232,7 +1236,7 @@ uptest= none;
 *)
 	echo -e "$ansi_green # ------------------------------------------------------------------- $ansi_std"
 	echo -e "$ansi_green # Copyright (C) 2016 Jason Lin <wojiaolinmu008@gmail.com> $ansi_std"
-	echo -e "$ansi_green # Last edited: 2016.9.8 $ansi_std"
+	echo -e "$ansi_green # Last edited: 2016.9.16 $ansi_std"
 	echo -e "$ansi_green # Version: V1.6-beta (ARM version) $ansi_std"
 	echo -e "$ansi_green # Explain: This script can be used only for DD-WRT ARM firmware. $ansi_std"
 	echo -e "$ansi_green # Description: This is a science on ShadowSocks Internet automatic $ansi_std"
